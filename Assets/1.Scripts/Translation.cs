@@ -77,4 +77,76 @@ public static class Translation
         }
         return null;
     }
+    
+    public static string GetLoading(Language language)
+    {
+        switch(language)
+        {
+            case Language.Korean:
+                return "로딩중";
+            case Language.English:
+                return "Loading";
+        }
+        return null;
+    }
+
+    public static string GetRequestIdentification(Language language)
+    {
+        switch(language)
+        {
+            case Language.Korean:
+                return "올바른 아이디를 입력해주세요";
+            case Language.English:
+                return "Please enter a valid ID";
+        }
+        return null;
+    }
+
+    public static string GetVolume(Language language)
+    {
+        switch (language)
+        {
+            case Language.Korean:
+                return "음량";
+            case Language.English:
+                return "Volume";
+        }
+        return null;
+    }
+
+    public static string GetMasterVolume(Language language)
+    {
+        switch (language)
+        {
+            case Language.Korean:
+                return "마스터";
+            case Language.English:
+                return "Master";
+        }
+        return null;
+    }
+
+    public static string GetEffectVolume(Language language)
+    {
+        switch (language)
+        {
+            case Language.Korean:
+                return "효과음";
+            case Language.English:
+                return "Effect";
+        }
+        return null;
+    }
+
+    public static string GetBackgroundVolume(Language language)
+    {
+        switch (language)
+        {
+            case Language.Korean:
+                return "배경음";
+            case Language.English:
+                return "Background";
+        }
+        return null;
+    }
 }

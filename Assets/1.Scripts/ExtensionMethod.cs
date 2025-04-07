@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using TMPro;
 
 public static class ExtensionMethod
@@ -26,6 +27,24 @@ public static class ExtensionMethod
         if(tmpInputField != null)
         {
             tmpInputField.interactable = value;
+        }
+    }
+
+    public static string GetText(this TMP_InputField tmpInputField)
+    {
+        if (tmpInputField != null)
+        {
+            return tmpInputField.text;
+        }
+        return null;
+    }
+
+    public static void SetListener(this Slider slider, UnityAction<float> action)
+    {
+        if (slider != null)
+        {
+            slider.onValueChanged.RemoveAllListeners();
+            slider.onValueChanged.AddListener(action);
         }
     }
 
