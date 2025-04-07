@@ -1,0 +1,41 @@
+using UnityEngine;
+using Photon.Pun;
+
+[DisallowMultipleComponent]
+[RequireComponent(typeof(Animator))]
+[RequireComponent(typeof(PhotonView))]
+[RequireComponent(typeof(PhotonTransformView))]
+[RequireComponent(typeof(PhotonAnimatorView))]
+public class PersonObject : MonoBehaviourPunCallbacks
+{
+    private bool _hasAnimator = false;
+
+    private Animator _animator = null;
+
+    private Animator getAnimator
+    {
+        get
+        {
+            if(_hasAnimator == false)
+            {
+                _hasAnimator = TryGetComponent(out _animator);
+            }
+            return _animator;
+        }
+    }
+
+    private void Awake()
+    {
+        
+    }
+
+    private void OnDestroy()
+    {
+        
+    }
+
+    public void Move(Vector3 point)
+    {
+
+    }
+}

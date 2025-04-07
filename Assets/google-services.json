@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1066139439826",
+    "firebase_url": "https://crimeplan-6dc88-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "crimeplan-6dc88",
+    "storage_bucket": "crimeplan-6dc88.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1066139439826:android:1981064fd1d6c6726c930b",
+        "android_client_info": {
+          "package_name": "com.Jungyounghan.CrimePlan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhlnChDUhRYAZH7gyFN4nTS2_-E_VXWTo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
