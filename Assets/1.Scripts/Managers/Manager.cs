@@ -11,8 +11,10 @@ using Photon.Pun;
 [RequireComponent(typeof(AudioSource))]
 public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehaviour
 {
-
     private static T _instance = null;
+
+    [Header("설정"), SerializeField]
+    private Button _settingButton;
 
     private bool _hasAudioSource = false;
 
@@ -23,7 +25,7 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
         {
             if(_hasAudioSource == false)
             {
-
+                _hasAudioSource = TryGetComponent(out _audioSource);
             }
             return _audioSource;
         }
@@ -31,8 +33,7 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
 
     [Header("오디오 믹서"), SerializeField]
     private AudioMixer _audioMixer;
-
-    [Header("음량 텍스트"), SerializeField]
+    [Header("음량"), SerializeField]
     private TMP_Text _volumeText;
 
     [Serializable]
@@ -54,17 +55,34 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
         }
     }
 
-    [Header("전체 음량 설정"), SerializeField]
+    [SerializeField]
     private Volume _masterVolume;
-    [Header("효과음 설정"), SerializeField]
+    [SerializeField]
     private Volume _effectVolume;
-    [Header("배경음 설정"), SerializeField]
+    [SerializeField]
     private Volume _backgroundVolume;
+
+    [Header("언어"), SerializeField]
+    private TMP_Text _languageText;
+    [SerializeField]
+    private TMP_Text _closeText;
+
+    [Header("종료"), SerializeField]
+    private GameObject _quitObject;
+    [SerializeField]
+    private TMP_Text _quitText;
+    [SerializeField]
+    private TMP_Text _yesText;
+    [SerializeField]
+    private TMP_Text _noText;
+
+    protected Coroutine _coroutine = null;
 
     private static readonly string MasterMixer = "Master";
     private static readonly string EffectMixer = "Effect";
     private static readonly string BackgroundMixer = "Background";
-    private static readonly string LanguageValue = "Language";
+    protected static readonly string LanguageTag = "Language";
+    protected static readonly string UsersTag = "Users";
 
 #if UNITY_EDITOR
     [Header("언어 변경"), SerializeField]
@@ -95,12 +113,36 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
     }
 #endif
 
-    protected virtual void Awake()
+    private void Awake()
     {
-        ChangeText((Translation.Language)PlayerPrefs.GetInt(LanguageValue));
+        PhotonNetwork.GameVersion = Application.version;
+        ChangeText((Translation.Language)PlayerPrefs.GetInt(LanguageTag));
         _masterVolume.SetListener(SetMasterVolume);
         _effectVolume.SetListener(SetEffectVolume);
         _backgroundVolume.SetListener(SetBackgroundVolume);
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape) && _quitObject != null)
+        {
+            _quitObject.SetActive(!_quitObject.activeInHierarchy);
+        }
+    }
+
+    private void OnApplicationQuit()
+    {
+        Authentication.SignOut();
+    }
+
+    public override void OnDisable()
+    {
+        base.OnDisable();
+        if (_coroutine != null)
+        {
+            StopCoroutine(_coroutine);
+            _coroutine = null;
+        }
     }
 
     protected virtual void ChangeText(Translation.Language language)
@@ -109,9 +151,17 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
         _masterVolume.SetText(Translation.GetMasterVolume(language));
         _effectVolume.SetText(Translation.GetEffectVolume(language));
         _backgroundVolume.SetText(Translation.GetBackgroundVolume(language));
+        _languageText.Set(Translation.GetLanguage(language));
+        _closeText.Set(Translation.GetClose(language));
+        _quitText.Set(Translation.GetQuit(language));
+        _yesText.Set(Translation.GetYes(language));
+        _noText.Set(Translation.GetNo(language));
     }
 
-    protected abstract void SetInteractable(bool value);
+    protected virtual void SetInteractable(bool value)
+    {
+        _settingButton.SetInteractable(value);
+    }
 
     public abstract void Quit();
 
@@ -143,7 +193,7 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
     {
         if (index >= byte.MinValue && index <= byte.MaxValue)
         {
-            PlayerPrefs.SetInt(LanguageValue, index);
+            PlayerPrefs.SetInt(LanguageTag, index);
             ChangeText((Translation.Language)index);
         }
     }

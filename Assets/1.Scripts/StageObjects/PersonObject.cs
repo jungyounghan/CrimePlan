@@ -6,7 +6,7 @@ using Photon.Pun;
 [RequireComponent(typeof(PhotonView))]
 [RequireComponent(typeof(PhotonTransformView))]
 [RequireComponent(typeof(PhotonAnimatorView))]
-public class PersonObject : MonoBehaviourPunCallbacks
+public class PersonObject : MonoBehaviourPunCallbacks, IPunObservable
 {
     private bool _hasAnimator = false;
 
@@ -23,6 +23,8 @@ public class PersonObject : MonoBehaviourPunCallbacks
             return _animator;
         }
     }
+    [SerializeField]
+    private Vector2 position;
 
     private void Awake()
     {
@@ -37,5 +39,9 @@ public class PersonObject : MonoBehaviourPunCallbacks
     public void Move(Vector3 point)
     {
 
+    }
+
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
     }
 }

@@ -14,11 +14,18 @@ public static class ExtensionMethod
         }
     }
 
-    public static void SetText(this TMP_InputField tmpInputField, string value)
+    public static void SetText(this TMP_InputField tmpInputField, string value, bool placeholder = true)
     {
-        if(tmpInputField != null && tmpInputField.placeholder is TextMeshProUGUI placeholderText)
+        if(tmpInputField != null)
         {
-            placeholderText.text = value;
+            if(placeholder == false)
+            {
+                tmpInputField.text = value;
+            }
+            else if(tmpInputField.placeholder is TextMeshProUGUI placeholderText)
+            {
+                placeholderText.text = value;
+            }
         }
     }
 
