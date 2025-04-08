@@ -282,30 +282,6 @@ public static partial class Translation
         return null;
     }
 
-    public static string GetSignInWrongPassword(Language language)
-    {
-        switch (language)
-        {
-            case Language.Korean:
-                return "비밀번호가 틀렸습니다";
-            case Language.English:
-                return "The password is wrong";
-        }
-        return null;
-    }
-
-    public static string GetSignInUserNotFound(Language language)
-    {
-        switch (language)
-        {
-            case Language.Korean:
-                return "존재하지 않는 계정입니다";
-            case Language.English:
-                return "This account doesn't exist";
-        }
-        return null;
-    }
-
     public static string GetSignInAlready(Language language)
     {
         switch (language)

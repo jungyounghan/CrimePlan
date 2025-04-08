@@ -76,8 +76,6 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
     [SerializeField]
     private TMP_Text _noText;
 
-    protected Coroutine _coroutine = null;
-
     private static readonly string MasterMixer = "Master";
     private static readonly string EffectMixer = "Effect";
     private static readonly string BackgroundMixer = "Background";
@@ -115,11 +113,7 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
 
     private void Awake()
     {
-        PhotonNetwork.GameVersion = Application.version;
-        ChangeText((Translation.Language)PlayerPrefs.GetInt(LanguageTag));
-        _masterVolume.SetListener(SetMasterVolume);
-        _effectVolume.SetListener(SetEffectVolume);
-        _backgroundVolume.SetListener(SetBackgroundVolume);
+        Initialize();
     }
 
     private void Update()
@@ -135,14 +129,13 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
         Authentication.SignOut();
     }
 
-    public override void OnDisable()
+    protected virtual void Initialize()
     {
-        base.OnDisable();
-        if (_coroutine != null)
-        {
-            StopCoroutine(_coroutine);
-            _coroutine = null;
-        }
+        PhotonNetwork.GameVersion = Application.version;
+        ChangeText((Translation.Language)PlayerPrefs.GetInt(LanguageTag));
+        _masterVolume.SetListener(SetMasterVolume);
+        _effectVolume.SetListener(SetEffectVolume);
+        _backgroundVolume.SetListener(SetBackgroundVolume);
     }
 
     protected virtual void ChangeText(Translation.Language language)
