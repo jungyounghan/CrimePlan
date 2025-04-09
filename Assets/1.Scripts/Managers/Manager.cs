@@ -13,17 +13,18 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
 {
     private static T _instance = null;
 
-    [Header("설정"), SerializeField]
-    private Button _settingButton;
+    [Header("오디오 믹서"), SerializeField]
+    private AudioMixer _audioMixer;
 
     private bool _hasAudioSource = false;
 
     private AudioSource _audioSource = null;
 
-    private AudioSource getAudioSource {
+    private AudioSource getAudioSource
+    {
         get
         {
-            if(_hasAudioSource == false)
+            if (_hasAudioSource == false)
             {
                 _hasAudioSource = TryGetComponent(out _audioSource);
             }
@@ -31,10 +32,10 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
         }
     }
 
-    [Header("오디오 믹서"), SerializeField]
-    private AudioMixer _audioMixer;
-    [Header("음량"), SerializeField]
-    private TMP_Text _volumeText;
+    [Header("설정"), SerializeField]
+    private Button _settingButton;
+    [SerializeField]
+    private TMP_Text _settingText;
 
     [Serializable]
     private struct Volume
@@ -62,25 +63,25 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
     [SerializeField]
     private Volume _backgroundVolume;
 
-    [Header("언어"), SerializeField]
+    [SerializeField]
     private TMP_Text _languageText;
     [SerializeField]
     private TMP_Text _closeText;
 
-    [Header("종료"), SerializeField]
-    private GameObject _quitObject;
+    [Header("알림 팝업"), SerializeField]
+    private GameObject _noticeObject;
     [SerializeField]
-    private TMP_Text _quitText;
+    private TMP_Text _explainText;
+
     [SerializeField]
-    private TMP_Text _yesText;
+    private Button _yesButton;
     [SerializeField]
-    private TMP_Text _noText;
+    private Button _noButton;
 
     private static readonly string MasterMixer = "Master";
     private static readonly string EffectMixer = "Effect";
     private static readonly string BackgroundMixer = "Background";
     protected static readonly string LanguageTag = "Language";
-    protected static readonly string UsersTag = "Users";
 
 #if UNITY_EDITOR
     [Header("언어 변경"), SerializeField]
@@ -116,48 +117,6 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
         Initialize();
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape) && _quitObject != null)
-        {
-            _quitObject.SetActive(!_quitObject.activeInHierarchy);
-        }
-    }
-
-    private void OnApplicationQuit()
-    {
-        Authentication.SignOut();
-    }
-
-    protected virtual void Initialize()
-    {
-        PhotonNetwork.GameVersion = Application.version;
-        ChangeText((Translation.Language)PlayerPrefs.GetInt(LanguageTag));
-        _masterVolume.SetListener(SetMasterVolume);
-        _effectVolume.SetListener(SetEffectVolume);
-        _backgroundVolume.SetListener(SetBackgroundVolume);
-    }
-
-    protected virtual void ChangeText(Translation.Language language)
-    {
-        _volumeText.Set(Translation.GetVolume(language));
-        _masterVolume.SetText(Translation.GetMasterVolume(language));
-        _effectVolume.SetText(Translation.GetEffectVolume(language));
-        _backgroundVolume.SetText(Translation.GetBackgroundVolume(language));
-        _languageText.Set(Translation.GetLanguage(language));
-        _closeText.Set(Translation.GetClose(language));
-        _quitText.Set(Translation.GetQuit(language));
-        _yesText.Set(Translation.GetYes(language));
-        _noText.Set(Translation.GetNo(language));
-    }
-
-    protected virtual void SetInteractable(bool value)
-    {
-        _settingButton.SetInteractable(value);
-    }
-
-    public abstract void Quit();
-
     private void SetMasterVolume(float volume)
     {
         if (_audioMixer != null)
@@ -182,6 +141,41 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
         }
     }
 
+    protected void SetExplain(string value)
+    {
+        _explainText.Set(value);
+    }
+
+    protected void Quit()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
+    protected void ShowPopup(UnityAction action)
+    {
+        _noticeObject.Set(true);
+        _yesButton.SetListener(action, Translation.Get(Translation.Letter.Confirm));
+        _noButton.SetListener(null, null, false);
+    }
+
+    protected void ShowPopup(UnityAction yesAction, UnityAction noAction)
+    {
+        _noticeObject.Set(true);
+        _yesButton.SetListener(yesAction, Translation.Get(Translation.Letter.Yes));
+        _noButton.SetListener(noAction, Translation.Get(Translation.Letter.No));
+    }
+
+    protected void ClosePopup()
+    {
+        _noticeObject.Set(false);
+        _yesButton.SetListener(null, null, false);
+        _noButton.SetListener(null, null, false);
+    }
+
     public void SetLanguage(int index)
     {
         if (index >= byte.MinValue && index <= byte.MaxValue)
@@ -193,7 +187,43 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
 
     public void PlaySound(AudioClip audioClip)
     {
+        getAudioSource.Stop();
         getAudioSource.clip = audioClip;
         getAudioSource.Play();
+    }
+
+    protected virtual void Initialize()
+    {
+        PhotonNetwork.GameVersion = Application.version;
+        ChangeText((Translation.Language)PlayerPrefs.GetInt(LanguageTag));
+        _masterVolume.SetListener(SetMasterVolume);
+        _effectVolume.SetListener(SetEffectVolume);
+        _backgroundVolume.SetListener(SetBackgroundVolume);
+    }
+
+    protected virtual void ChangeText(Translation.Language language)
+    {
+        Translation.Set(language);
+        _settingText.Set(Translation.Get(Translation.Letter.Setting));
+        string volume = Translation.Get(Translation.Letter.Volume);
+        _masterVolume.SetText(Translation.Get(Translation.Letter.Master) + " " + volume);
+        _effectVolume.SetText(Translation.Get(Translation.Letter.Effect) + " " + volume);
+        _backgroundVolume.SetText(Translation.Get(Translation.Letter.Background) + " " + volume);
+        _languageText.Set(Translation.Get(Translation.Letter.Language));
+        _closeText.Set(Translation.Get(Translation.Letter.Close));
+        if (_noButton == null || _noButton.gameObject.activeSelf == false)
+        {
+            _yesButton.SetText(Translation.Get(Translation.Letter.Confirm));
+        }
+        else
+        {
+            _noButton.SetText(Translation.Get(Translation.Letter.No));
+            _yesButton.SetText(Translation.Get(Translation.Letter.Yes));
+        }
+    }
+
+    protected virtual void SetInteractable(bool value)
+    {
+        _settingButton.SetInteractable(value);
     }
 }

@@ -6,6 +6,14 @@ using TMPro;
 
 public static class ExtensionMethod
 {
+    public static void Set(this GameObject gameObject, bool value)
+    {
+        if(gameObject != null)
+        {
+            gameObject.SetActive(value);
+        }
+    }
+
     public static void Set(this TMP_Text tmpText, string value)
     {
         if (tmpText != null)
@@ -55,6 +63,14 @@ public static class ExtensionMethod
         }
     }
 
+    public static void SetActive(this Button button, bool value)
+    {
+        if (button != null)
+        {
+            button.gameObject.Set(value);
+        }
+    }
+
     public static void SetText(this Button button, string value)
     {
         if (button != null)
@@ -72,6 +88,35 @@ public static class ExtensionMethod
         if(button != null)
         {
             button.interactable = value;
+        }
+    }
+
+    public static void SetListener(this Button button, UnityAction action, string value, bool active = true)
+    {
+        if (button != null)
+        {
+            TextMeshProUGUI[] tmpTexts = button.GetComponentsInChildren<TextMeshProUGUI>();
+            foreach (TextMeshProUGUI tmpText in tmpTexts)
+            {
+                tmpText.text = value;
+            }
+            switch (active)
+            {
+                case true:
+                    if (button.gameObject.activeSelf == false)
+                    {
+                        button.gameObject.SetActive(true);
+                    }
+                    break;
+                case false:
+                    if (button.gameObject.activeSelf == true)
+                    {
+                        button.gameObject.SetActive(false);
+                    }
+                    break;
+            }
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(action);
         }
     }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Firebase;
 using Firebase.Auth;
 using Firebase.Database;
@@ -10,16 +11,25 @@ public static class Authentication
     {
         EmptyAccount,
         SignUpFailure,
-        SignUpDuplicate,
+        SignUpAlready,
         SignUpSuccess,
         SignInFailure,
+        SignInAlready,
         SignInInvalidEmail,
+        SignInSuccess,
     }
+
+    [Serializable]
+    public class LoginInfo
+    {
+        public string uid;
+        public long timestamp;
+    }
+
+    private static readonly string UsersTag = "Users";
 
     private static FirebaseAuth firebaseAuth = null;
     private static DatabaseReference databaseReference = null;
-
-    private static readonly string sessionIdTag = "sessionId";
 
     public static void Initialize(Action<DependencyStatus> action = null)
     {
@@ -42,24 +52,21 @@ public static class Authentication
             {
                 firebaseAuth.CreateUserWithEmailAndPasswordAsync(identification, password).ContinueWithOnMainThread(task =>
                 {
-                    if (task.IsFaulted == true)
+                    if (task.IsFaulted == true || task.IsCanceled == true)
                     {
                         foreach (Exception exception in task.Exception.Flatten().InnerExceptions)
                         {
                             if (exception is FirebaseException firebaseException)
                             {
-                                AuthError errorCode = (AuthError)firebaseException.ErrorCode;
-                                if (errorCode == AuthError.EmailAlreadyInUse)
+                                AuthError authError = (AuthError)firebaseException.ErrorCode;
+                                switch (authError)
                                 {
-                                    action?.Invoke(State.SignUpDuplicate);
-                                    return;
+                                    case AuthError.EmailAlreadyInUse:
+                                        action?.Invoke(State.SignUpAlready);
+                                        return;
                                 }
                             }
                         }
-                        action?.Invoke(State.SignUpFailure);
-                    }
-                    else if(task.IsCanceled == true)
-                    {
                         action?.Invoke(State.SignUpFailure);
                     }
                     else
@@ -72,7 +79,7 @@ public static class Authentication
             {
                 firebaseAuth.SignInWithEmailAndPasswordAsync(identification, password).ContinueWithOnMainThread(task =>
                 {
-                    if (task.IsFaulted)
+                    if (task.IsFaulted == true || task.IsCanceled == true)
                     {
                         foreach (Exception exception in task.Exception.Flatten().InnerExceptions)
                         {
@@ -89,54 +96,59 @@ public static class Authentication
                         }
                         action?.Invoke(State.SignInFailure);
                     }
-                    else if(task.IsCanceled)
-                    {
-                        action?.Invoke(State.SignInFailure);
-                    }
                     else
                     {
-                        //FirebaseUser user = FirebaseAuth.DefaultInstance.CurrentUser;
-                        //if (user == null)
-                        //{
-                        //    done = true;
-                        //    ShowMessage(Message.SignInFailure);
-                        //}
-                        //else
-                        //{
-                        //    string userId = task.Result.User.UserId;
-                        //    string sessionId = Guid.NewGuid().ToString();
-                        //    _databaseReference = FirebaseDatabase.DefaultInstance.GetReference(UsersTag).Child(userId).Child("sessionId");
-                        //    _databaseReference.GetValueAsync().ContinueWithOnMainThread(getTask =>
-                        //    {
-                        //        done = true;
-                        //        if (getTask.IsFaulted || getTask.IsCanceled)
-                        //        {
-                        //            Debug.LogError("세션 조회 실패");
-                        //        }
-                        //        else
-                        //        {
-                        //            string existingSession = getTask.Result?.Value?.ToString();
-                        //            if (!string.IsNullOrEmpty(existingSession) && existingSession != sessionId)
-                        //            {
-                        //                Debug.Log("다른 기기에서 이미 로그인 중입니다.");
-                        //                            //FirebaseAuth.DefaultInstance.SignOut();
-                        //                        }
-                        //            else
-                        //            {
+                        FirebaseUser firebaseUser = task.Result.User;
+                        if (firebaseUser == null)
+                        {
+                            action?.Invoke(State.SignInFailure);
+                        }
+                        else
+                        {
+                            databaseReference = FirebaseDatabase.DefaultInstance.RootReference.Child(UsersTag).Child(firebaseUser.UserId);
 
-                        //                            // 세션 저장 및 OnDisconnect 제거 설정
-                        //                            _databaseReference.SetValueAsync(sessionId);
-                        //                _databaseReference.OnDisconnect().RemoveValue();
+                            long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-                        //                            // 실시간 감지
-                        //                            //_databaseReference.ValueChanged += OnSessionChanged;
+                            databaseReference.RunTransaction(mutableData =>
+                            {
+                                if (mutableData.Value == null)
+                                {
+                                    mutableData.Value = new Dictionary<string, object> {
+            { "uid", firebaseUser.UserId },
+            { "timestamp", now }
+        };
+                                    return TransactionResult.Success(mutableData);
+                                }
+                                else
+                                {
+                                    return TransactionResult.Abort(); // 이미 로그인 중
+                                }
+                            }).ContinueWithOnMainThread(task =>
+                            {
+                                if (task.IsCanceled || task.IsFaulted)
+                                {
+                                    UnityEngine.Debug.LogError("트랜잭션 실패");
+                                    firebaseAuth.SignOut();
+                                    firebaseUser = null;
+                                    action?.Invoke(State.SignInAlready);
+                                    return;
+                                }
 
-                        //                            Debug.Log("로그인 및 세션 설정 완료");
-                        //                            // 포톤 로그인 등 이어서 처리
-                        //                        }
-                        //        }
-                        //    });
-                        //}
+                                DataSnapshot result = task.Result;
+
+                                if (result.Value == null)
+                                {
+                                    firebaseAuth.SignOut();
+                                    firebaseUser = null;
+                                    action?.Invoke(State.SignInAlready);
+                                    return;
+                                }
+
+                                UnityEngine.Debug.Log("로그인 성공");
+                                databaseReference.OnDisconnect().RemoveValue();
+                                action?.Invoke(State.SignInSuccess);
+                            });
+                        }
                     }
                 });
             }

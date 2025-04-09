@@ -2,8 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Firebase;
-using Firebase.Database;
 using Photon.Pun;
+using System;
 
 public class EntryManager : Manager<EntryManager>
 {
@@ -29,19 +29,32 @@ public class EntryManager : Manager<EntryManager>
         Trying,
         RequestIdentification,
         RequestPassword,
-        SignUpFailure,
-        SignUpDuplicate,
+        SignUpFailed,
+        SignUpAlready,
         SignUpSuccess,
-        SignInFailure,
+        SignInFailed,
         SignInInvalidEmail,
-        SignInAlready
+        SignInAlready,
+        LoseConnection
     }
 
     private Message _message = Message.None;
 
-    private static DatabaseReference _databaseReference = null;
-
     private static readonly string IdentificationTag = "Identification";
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.Escape) == true && _message != Message.LoseConnection)
+        {
+            ShowPopup(Quit, ClosePopup);
+        }
+    }
+
+    private void ShowQuit()
+    {
+        ShowMessage(Message.LoseConnection);
+        ShowPopup(Quit);
+    }
 
     protected override void Initialize()
     {
@@ -54,7 +67,7 @@ public class EntryManager : Manager<EntryManager>
             }
             else
             {
-                Quit();
+                ShowQuit();
             }
         });
     }
@@ -71,22 +84,13 @@ public class EntryManager : Manager<EntryManager>
     protected override void ChangeText(Translation.Language language)
     {
         base.ChangeText(language);
-        _titleText.Set(Translation.GetTitle(language));
-        _identificationInputField.SetText(Translation.GetIdentification(language));
-        _passwordInputField.SetText(Translation.GetPassword(language));
-        _signUpButton.SetText(Translation.GetSignUp(language));
-        _signInButton.SetText(Translation.GetSignIn(language));
-        _versionText.Set(PhotonNetwork.GameVersion + " " + Translation.GetVersion(language));
+        _titleText.Set(Translation.Get(Translation.Letter.Title));
+        _identificationInputField.SetText(Translation.Get(Translation.Letter.Identification));
+        _passwordInputField.SetText(Translation.Get(Translation.Letter.Password));
+        _signUpButton.SetText(Translation.Get(Translation.Letter.SignUp));
+        _signInButton.SetText(Translation.Get(Translation.Letter.SignIn));
+        _versionText.Set(PhotonNetwork.GameVersion + " " + Translation.Get(Translation.Letter.Version));
         ShowMessage(language);
-    }
-
-    public override void Quit()
-    {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
     }
 
     private void ShowMessage(Translation.Language language)
@@ -94,35 +98,41 @@ public class EntryManager : Manager<EntryManager>
         switch (_message)
         {
             case Message.Trying:
-                _messageText.Set(Translation.GetTrying(language));
+                _messageText.Set(Translation.Get(Translation.Letter.Trying));
                 break;
             case Message.RequestIdentification:
-                _messageText.Set(Translation.GetRequestIdentification(language));
+            case Message.SignInInvalidEmail:
+                _messageText.Set(string.Format(Translation.Get(Translation.Letter.RequestValid), Translation.Get(Translation.Letter.Identification)));
                 break;
             case Message.RequestPassword:
-                _messageText.Set(Translation.GetRequestPassword(language));
+                _messageText.Set(string.Format(Translation.Get(Translation.Letter.RequestValid), Translation.Get(Translation.Letter.Password)));
                 break;
-            case Message.SignUpFailure:
-                _messageText.Set(Translation.GetSignUpFailure(language));
+            case Message.SignUpFailed:
+                _messageText.Set(Translation.Get(Translation.Letter.SignUp) + " " + Translation.Get(Translation.Letter.Failed));
                 break;
-            case Message.SignUpDuplicate:
-                _messageText.Set(Translation.GetSignUpDuplicate(language));
+            case Message.SignUpAlready:
+                _messageText.Set(string.Format(Translation.Get(Translation.Letter.Duplicated), Translation.Get(Translation.Letter.Identification)));
                 break;
             case Message.SignUpSuccess:
-                _messageText.Set(Translation.GetSignUpSuccess(language));
+                _messageText.Set(Translation.Get(Translation.Letter.SignUp) + " " + Translation.Get(Translation.Letter.Success));
                 break;
-            case Message.SignInFailure:
-                _messageText.Set(Translation.GetSignInFailure(language));
-                break;
-            case Message.SignInInvalidEmail:
-                _messageText.Set(Translation.GetSignInInvalidEmail(language));
+            case Message.SignInFailed:
+                _messageText.Set(Translation.Get(Translation.Letter.SignIn) + " " +  Translation.Get(Translation.Letter.Failed));
                 break;
             case Message.SignInAlready:
-                _messageText.Set(Translation.GetSignInAlready(language));
+                _messageText.Set(Translation.Get(Translation.Letter.AlreadyConnected));
                 break;
             default:
                 _messageText.Set(null);
                 break;
+        }
+        if(_message == Message.LoseConnection)
+        {
+            SetExplain(Translation.Get(Translation.Letter.LoseConnection));
+        }
+        else
+        {
+            SetExplain(string.Format(Translation.Get(Translation.Letter.DoYouWantTo), Translation.Get(Translation.Letter.Quit)));
         }
     }
 
@@ -132,11 +142,12 @@ public class EntryManager : Manager<EntryManager>
         ShowMessage((Translation.Language)PlayerPrefs.GetInt(LanguageTag));
         switch(_message)
         {
-            case Message.SignUpFailure:
-            case Message.SignUpDuplicate:
+            case Message.SignUpFailed:
+            case Message.SignUpAlready:
             case Message.SignUpSuccess:
-            case Message.SignInFailure:
+            case Message.SignInFailed:
             case Message.SignInInvalidEmail:
+            case Message.SignInAlready:
                 SetInteractable(true);
                 break;
         }
@@ -165,23 +176,29 @@ public class EntryManager : Manager<EntryManager>
                     switch (state)
                     {
                         case Authentication.State.EmptyAccount:
-                            Quit();
+                            ShowQuit();
                             break;
                         case Authentication.State.SignUpFailure:
-                            ShowMessage(Message.SignUpFailure);
+                            ShowMessage(Message.SignUpFailed);
                             break;
-                        case Authentication.State.SignUpDuplicate:
-                            ShowMessage(Message.SignUpDuplicate);
+                        case Authentication.State.SignUpAlready:
+                            ShowMessage(Message.SignUpAlready);
                             break;
                         case Authentication.State.SignUpSuccess:
                             ShowMessage(Message.SignUpSuccess);
                             PlayerPrefs.SetString(IdentificationTag, identification);
                             break;
                         case Authentication.State.SignInFailure:
-                            ShowMessage(Message.SignInFailure);
+                            ShowMessage(Message.SignInFailed);
                             break;
                         case Authentication.State.SignInInvalidEmail:
                             ShowMessage(Message.SignInInvalidEmail);
+                            break;
+                        case Authentication.State.SignInAlready:
+                            ShowMessage(Message.SignInAlready);
+                            break;
+                        case Authentication.State.SignInSuccess:
+
                             break;
                     }
                 });
