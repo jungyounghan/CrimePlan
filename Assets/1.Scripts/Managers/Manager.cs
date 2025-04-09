@@ -185,7 +185,7 @@ public abstract class Manager<T> : MonoBehaviourPunCallbacks where T : MonoBehav
         }
     }
 
-    public void PlaySound(AudioClip audioClip)
+    public void PlayBackgroundSound(AudioClip audioClip)
     {
         getAudioSource.Stop();
         getAudioSource.clip = audioClip;

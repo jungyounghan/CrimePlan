@@ -19,17 +19,24 @@ public static class Authentication
         SignInSuccess,
     }
 
-    [Serializable]
-    public class LoginInfo
-    {
-        public string uid;
-        public long timestamp;
-    }
-
     private static readonly string UsersTag = "Users";
+    private static readonly string SessionTag = "Session";
+    private static readonly string TokenTag = "Token";
+    private static readonly string TimestampTag = "Timestamp";
 
     private static FirebaseAuth firebaseAuth = null;
     private static DatabaseReference databaseReference = null;
+    private static EventHandler<ValueChangedEventArgs> sessionListener = null;
+
+    private static void CleanupSessionListener()
+    {
+        if (databaseReference != null && sessionListener != null)
+        {
+            databaseReference.ValueChanged -= sessionListener;
+            databaseReference = null;
+            sessionListener = null;
+        }
+    }
 
     public static void Initialize(Action<DependencyStatus> action = null)
     {
@@ -71,6 +78,7 @@ public static class Authentication
                     }
                     else
                     {
+                        FirebaseDatabase.DefaultInstance.RootReference.Child(UsersTag).Child(task.Result.User.UserId).Child(SessionTag).SetValueAsync("");
                         action?.Invoke(State.SignUpSuccess);
                     }
                 });
@@ -105,48 +113,73 @@ public static class Authentication
                         }
                         else
                         {
-                            databaseReference = FirebaseDatabase.DefaultInstance.RootReference.Child(UsersTag).Child(firebaseUser.UserId);
-
-                            long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-                            databaseReference.RunTransaction(mutableData =>
+                            string userId = task.Result.User.UserId;
+                            string sessionToken = Guid.NewGuid().ToString();
+                            databaseReference = FirebaseDatabase.DefaultInstance.RootReference.Child(UsersTag).Child(userId);
+                            databaseReference.Child(SessionTag).RunTransaction(mutableData =>
                             {
-                                if (mutableData.Value == null)
+                                Dictionary<string, object> data = mutableData.Value as Dictionary<string, object>;
+                                if (data == null || data.ContainsKey(TokenTag) == false) // 세션 없음: 내가 선점
                                 {
-                                    mutableData.Value = new Dictionary<string, object> {
-            { "uid", firebaseUser.UserId },
-            { "timestamp", now }
-        };
+                                    mutableData.Value = new Dictionary<string, object>
+                                    {
+                                        { TokenTag, sessionToken },
+                                        { TimestampTag, ServerValue.Timestamp }
+                                    };
                                     return TransactionResult.Success(mutableData);
                                 }
-                                else
-                                {
-                                    return TransactionResult.Abort(); // 이미 로그인 중
-                                }
+                                return TransactionResult.Abort(); // 이미 세션 있음: 내가 새로 덮을 수 없음
                             }).ContinueWithOnMainThread(task =>
                             {
                                 if (task.IsCanceled || task.IsFaulted)
                                 {
-                                    UnityEngine.Debug.LogError("트랜잭션 실패");
                                     firebaseAuth.SignOut();
-                                    firebaseUser = null;
                                     action?.Invoke(State.SignInAlready);
-                                    return;
                                 }
-
-                                DataSnapshot result = task.Result;
-
-                                if (result.Value == null)
+                                else
                                 {
-                                    firebaseAuth.SignOut();
-                                    firebaseUser = null;
-                                    action?.Invoke(State.SignInAlready);
-                                    return;
+                                    DataSnapshot snapshot = task.Result;
+                                    if (snapshot == null || snapshot.Value == null)
+                                    {
+                                        firebaseAuth.SignOut();
+                                        action?.Invoke(State.SignInAlready);
+                                    }
+                                    else
+                                    {
+                                        Dictionary<string, object> resultData = snapshot.Value as Dictionary<string, object>;
+                                        if (resultData == null || resultData.ContainsKey(TokenTag) == false || resultData[TokenTag].ToString() != sessionToken)
+                                        {
+                                            firebaseAuth.SignOut();
+                                            action?.Invoke(State.SignInAlready);
+                                        }
+                                        else //트랜잭션 성공 = 내가 첫 로그인 사용자
+                                        {
+                                            databaseReference.Child(SessionTag).OnDisconnect().SetValue(""); // 나만 이 세션 소유
+                                            action?.Invoke(State.SignInSuccess); // 이후 주기적으로 내 세션 유지 확인 필요
+                                            sessionListener = (object sender, ValueChangedEventArgs arguments) =>
+                                            {
+                                                if (arguments.DatabaseError == null)
+                                                {
+                                                    if (arguments.Snapshot.Exists == false) //세션 노드가 삭제됨 (로그아웃됨)
+                                                    {
+                                                        firebaseAuth.SignOut();
+                                                        CleanupSessionListener();//action?.Invoke(State.SignInAlready);
+                                                    }
+                                                    else
+                                                    {
+                                                        Dictionary<string, object> data = arguments.Snapshot.Value as Dictionary<string, object>;
+                                                        if (data != null && data.TryGetValue(TokenTag, out object serverTokenObject) && serverTokenObject.ToString() != sessionToken) //세션 탈취 감지: 다른 기기에서 로그인됨
+                                                        {
+                                                            firebaseAuth.SignOut();
+                                                            CleanupSessionListener();//action?.Invoke(State.SignInAlready);
+                                                        }
+                                                    }
+                                                }
+                                            };
+                                            databaseReference.Child(SessionTag).ValueChanged += sessionListener;
+                                        }
+                                    }
                                 }
-
-                                UnityEngine.Debug.Log("로그인 성공");
-                                databaseReference.OnDisconnect().RemoveValue();
-                                action?.Invoke(State.SignInSuccess);
                             });
                         }
                     }
@@ -156,15 +189,6 @@ public static class Authentication
         else
         {
             action?.Invoke(State.EmptyAccount);
-        }
-    }
-
-    public static void SignOut()
-    {
-        if (firebaseAuth != null)
-        {
-            firebaseAuth.SignOut();
-            firebaseAuth = null;
         }
     }
 }

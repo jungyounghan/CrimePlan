@@ -1,9 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 using Firebase;
 using Photon.Pun;
-using System;
+using Photon.Realtime;
 
 public class EntryManager : Manager<EntryManager>
 {
@@ -90,10 +91,10 @@ public class EntryManager : Manager<EntryManager>
         _signUpButton.SetText(Translation.Get(Translation.Letter.SignUp));
         _signInButton.SetText(Translation.Get(Translation.Letter.SignIn));
         _versionText.Set(PhotonNetwork.GameVersion + " " + Translation.Get(Translation.Letter.Version));
-        ShowMessage(language);
+        ShowMessage();
     }
 
-    private void ShowMessage(Translation.Language language)
+    private void ShowMessage()
     {
         switch (_message)
         {
@@ -139,7 +140,7 @@ public class EntryManager : Manager<EntryManager>
     private void ShowMessage(Message value)
     {
         _message = value;
-        ShowMessage((Translation.Language)PlayerPrefs.GetInt(LanguageTag));
+        ShowMessage();
         switch(_message)
         {
             case Message.SignUpFailed:
@@ -198,11 +199,23 @@ public class EntryManager : Manager<EntryManager>
                             ShowMessage(Message.SignInAlready);
                             break;
                         case Authentication.State.SignInSuccess:
-
+                            PlayerPrefs.SetString(IdentificationTag, identification);
+                            PhotonNetwork.ConnectUsingSettings();
                             break;
                     }
                 });
             }
         }
+    }
+
+    public override void OnConnectedToMaster()
+    {
+        //SceneManager.LoadScene();
+        //씬 이동을 하자 LobbyManager Initialize에서 PhotonNetwork.JoinLobby();
+    }
+
+    public override void OnDisconnected(DisconnectCause cause)
+    {
+        ShowQuit();
     }
 }
