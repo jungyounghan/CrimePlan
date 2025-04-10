@@ -34,9 +34,6 @@ public static class Korean
                 case Translation.Letter.No:
                     letters[i] = "아니오";
                     break;
-                case Translation.Letter.Trying:
-                    letters[i] = "시도중";
-                    break;
                 case Translation.Letter.Success:
                     letters[i] = "성공";
                     break;
@@ -77,7 +74,7 @@ public static class Korean
                     letters[i] = "올바른 {0}를 입력해주세요";
                     break;
                 case Translation.Letter.Duplicated:
-                    letters[i] = "중복된 {0} 입니다";
+                    letters[i] = "중복된 {0}입니다";
                     break;
                 case Translation.Letter.AlreadyConnected:
                     letters[i] = "이 계정은 현재 접속중입니다";
@@ -85,6 +82,9 @@ public static class Korean
 
                 case Translation.Letter.DoYouWantTo:
                     letters[i] = "{0} 하시겠습니까?";
+                    break;
+                case Translation.Letter.TryConnection:
+                    letters[i] = "접속 시도 중";
                     break;
                 case Translation.Letter.LoseConnection:
                     letters[i] = "연결이 끊어졌습니다";

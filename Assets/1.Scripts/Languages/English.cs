@@ -34,9 +34,6 @@ public static class English
                 case Translation.Letter.No:
                     letters[i] = "No";
                     break;
-                case Translation.Letter.Trying:
-                    letters[i] = "Trying";
-                    break;
                 case Translation.Letter.Success:
                     letters[i] = "Success";
                     break;
@@ -85,6 +82,9 @@ public static class English
 
                 case Translation.Letter.DoYouWantTo:
                     letters[i] = "Do You Want to {0}?";
+                    break;
+                case Translation.Letter.TryConnection:
+                    letters[i] = "Try to Connection";
                     break;
                 case Translation.Letter.LoseConnection:
                     letters[i] = "The Connection has been Lost";

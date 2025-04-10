@@ -17,7 +17,6 @@ public static class Translation
         Confirm,
         Yes,
         No,
-        Trying,
         Success,
         Failed,
 
@@ -37,6 +36,7 @@ public static class Translation
         AlreadyConnected,
 
         DoYouWantTo,
+        TryConnection,
         LoseConnection,
         Quit,
         End
