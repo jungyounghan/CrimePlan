@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Firebase;
 using Firebase.Auth;
 using Firebase.Database;
@@ -136,7 +137,7 @@ public static class Authentication
                                 if (task.IsCanceled || task.IsFaulted)
                                 {
                                     firebaseAuth.SignOut();
-                                    action?.Invoke(State.SignInAlready);
+                                    action?.Invoke(State.SignInFailure);
                                 }
                                 else
                                 {

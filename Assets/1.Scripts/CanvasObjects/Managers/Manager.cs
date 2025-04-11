@@ -88,7 +88,7 @@ public abstract class Manager : MonoBehaviourPunCallbacks
     [Header("언어 변경"), SerializeField]
     private Translation.Language _language = Translation.Language.Korean;
 
-    protected virtual void OnValidate()
+    private void OnValidate()
     {
         if (gameObject.scene == SceneManager.GetActiveScene())
         {

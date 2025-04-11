@@ -10,9 +10,10 @@ public class LobbyManager : Manager
     protected override void Initialize()
     {
         base.Initialize();
+        Debug.Log(PhotonNetwork.LocalPlayer.UserId);
         if(PhotonNetwork.IsConnectedAndReady == false)
         {
-            Debug.Log("나가기");
+            //Debug.Log("나가기");
         }
         else
         {

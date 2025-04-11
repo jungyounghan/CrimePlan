@@ -10,14 +10,15 @@ using ExitGames.Client.Photon;
 [RequireComponent(typeof(PhotonView))]
 [RequireComponent(typeof(PhotonTransformView))]
 [RequireComponent(typeof(PhotonAnimatorView))]
-public class PersonObject : MonoBehaviourPunCallbacks
+public class Person : MonoBehaviourPunCallbacks
 {
-    public enum Type: byte
+    public enum Form: byte
     {
-        Capper,
+        Start,
+        Capper = 0,
         Lady,
-        Police,
         Strider,
+        End
     }
 
     private bool _hasAnimator = false;
@@ -79,10 +80,13 @@ public class PersonObject : MonoBehaviourPunCallbacks
         }
     }
 
-    public static event Action<PersonObject> createAction = null;
+    public static event Action<Person> createAction = null;
 
     private static readonly string FallingMotion = "Falling";
     private static readonly Vector3 ColliderPoint = new Vector3(0, 0.5f, 0);
+
+    public const bool Citizen = false;
+    public const bool Criminal = true;
 
 #if UNITY_EDITOR
     private void OnValidate()

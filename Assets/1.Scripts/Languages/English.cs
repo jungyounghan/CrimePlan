@@ -56,6 +56,18 @@ public static class English
                 case Translation.Letter.Language:
                     letters[i] = "Language";
                     break;
+                case Translation.Letter.Morning:
+                    letters[i] = "Morning";
+                    break;
+                case Translation.Letter.Day:
+                    letters[i] = "Day {0}";
+                    break;
+                case Translation.Letter.Midday:
+                    letters[i] = "Midday";
+                    break;
+                case Translation.Letter.Evening:
+                    letters[i] = "Evening";
+                    break;
 
                 case Translation.Letter.Identification:
                     letters[i] = "User Id";

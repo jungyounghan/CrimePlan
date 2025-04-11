@@ -1,70 +1,35 @@
 using UnityEngine;
-using Cinemachine;
 using Photon.Pun;
 using ExitGames.Client.Photon;
 
-[RequireComponent(typeof(PlayerProfile))]
+[RequireComponent(typeof(StateController))]
 public class GameManager : Manager
 {
-    private bool _hasPlayerProfile = false;
+    private bool _hasStateController = false;
 
-    private PlayerProfile _playerProfile = null;
+    private StateController _stateController = null;
 
-    private PlayerProfile getPlayerProfile
+    private StateController getStateController
     {
         get
         {
-            if (_hasPlayerProfile == false)
+            if (_hasStateController == false)
             {
-                _hasPlayerProfile = TryGetComponent(out _playerProfile);
+                _hasStateController = TryGetComponent(out _stateController);
             }
-            return _playerProfile;
+            return _stateController;
         }
     }
 
     [Header(nameof(GameManager))]
     [SerializeField]
-    private PersonObject[] _personObjectPrefabs = new PersonObject[(int)PersonObject.Type.Strider + 1];
+    private StageController _stageController;
 
     private double _waitingTime = 0;
 
-#if UNITY_EDITOR
-    [Header("테스트 모드")]
-    [SerializeField]
-    private PersonObject.Type _testType = PersonObject.Type.Capper;
-    [SerializeField]
-    private uint _citizenCount = 1;
-    [SerializeField]
-    private uint _policeCount = 0;
-    [SerializeField]
-    private uint _criminalCount = 0;
-
-    protected override void OnValidate()
-    {
-        base.OnValidate();
-        if(_citizenCount == 0)
-        {
-            _citizenCount = 1;
-        }
-        switch (_testType)
-        {
-            case PersonObject.Type.Police:
-                if (_criminalCount == 0)
-                {
-                    _criminalCount = 1;
-                }
-                break;
-            default:
-                if (_policeCount == 0)
-                {
-                    _policeCount = 1;
-                }
-                break;
-        }
-    }
-#endif
-
     public static readonly string SceneName = "GameScene";
+
+    public const string TurnKey = "Turn";
 
     private void Update()
     {
@@ -75,51 +40,34 @@ public class GameManager : Manager
             {
                 _waitingTime = 0;
             }
-            getPlayerProfile.SetTimer(currentTime);
+            else if (Input.GetMouseButtonDown(0))
+            {
+                Camera camera = Camera.main;
+                if (camera != null)
+                {
+                    //누르고 명령 내리기(return 값이 있고 그것이 캔버스로 전송되게하자)
+                    _stageController?.UpdateInput(camera.ScreenPointToRay(Input.mousePosition)); 
+                }
+            }
+            getStateController.SetTimer(currentTime);
         }
-    }
-
-    private void OnDestroy()
-    {
-        PersonObject.createAction -= Create;
-    }
-
-    private void Create(PersonObject personObject)
-    {
-        if(PhotonNetwork.InRoom == true)
-        {
-
-        }
-        else
-        {
-
-        }
+        _stageController?.UpdateMove();
     }
 
     protected override void Initialize()
     {
         base.Initialize();
-        PersonObject.createAction += Create;
-        if (PhotonNetwork.InRoom == true)
-        {
-
-        }
-        else
-        {
-#if UNITY_EDITOR
-            if ((int)_testType < _personObjectPrefabs.Length && _personObjectPrefabs[(int)_testType] != null)
-            {
-                GameObject gameObject = Instantiate(_personObjectPrefabs[(int)_testType].gameObject);
-                FindObjectOfType<CinemachineVirtualCamera>().Set(gameObject.transform);
-            }
-            else
-            {
-                Debug.LogError("프리팹 삽입 필요");
-            }
-#endif
-        }
+        _stageController?.Initialize();
+        getStateController.Initialize();
     }
 
+    protected override void ChangeText(Translation.Language language)
+    {
+        base.ChangeText(language);
+        getStateController.ChangeText();
+    }
+
+#if UNITY_EDITOR
     public override void OnConnectedToMaster()
     {
         PhotonNetwork.JoinLobby();
@@ -134,9 +82,10 @@ public class GameManager : Manager
     {
         _waitingTime = PhotonNetwork.Time + 10;
     }
+#endif
 
     public override void OnRoomPropertiesUpdate(Hashtable hashtable)
     {
-
+        _stageController?.OnRoomPropertiesUpdate(hashtable);
     }
 }

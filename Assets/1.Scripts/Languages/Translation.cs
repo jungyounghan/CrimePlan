@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 public static class Translation
 {
     public enum Language : byte
@@ -25,6 +27,10 @@ public static class Translation
         Effect,
         Background,
         Language,
+        Day,
+        Morning,
+        Midday,
+        Evening,
 
         Identification,
         Password,

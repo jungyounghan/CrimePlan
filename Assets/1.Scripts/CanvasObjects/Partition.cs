@@ -7,9 +7,6 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Canvas))]
 [RequireComponent(typeof(CanvasScaler))]
 [RequireComponent(typeof(GraphicRaycaster))]
-/// <summary>
-/// 캔버스 하위에 있는 UI 패널 오브젝트 객체들을 원하는 구성으로 분할 해주는 기능이 있다.(휴대폰 노치에 호환되기 위해 사용)
-/// </summary>
 public class Partition : MonoBehaviour
 {
     private bool _hasRectTransform = false;
@@ -56,6 +53,28 @@ public class Partition : MonoBehaviour
                 rectTransform.sizeDelta = new Vector2((sizeDelta.x / division.x) - sizeDelta.x, (sizeDelta.y / division.y) - sizeDelta.y);
             }
         }
+
+#if UNITY_EDITOR
+
+        [SerializeField]
+        private Color gizmoColor;
+
+        private static readonly int SquarangularEdgeCount = 4;
+
+        public void OnDrawGizmos()
+        {
+            if (rectTransform != null)
+            {
+                Vector3[] corners = new Vector3[SquarangularEdgeCount];
+                rectTransform.GetWorldCorners(corners);
+                Gizmos.color = gizmoColor;
+                for (int i = 0; i < SquarangularEdgeCount; i++)
+                {
+                    Gizmos.DrawLine(corners[i], corners[(i + 1) % SquarangularEdgeCount]);
+                }
+            }
+        }
+#endif
     }
 
     [SerializeField]
@@ -69,6 +88,15 @@ public class Partition : MonoBehaviour
     private static Vector2 screenSize = new Vector2(Screen.width, Screen.height);
 
 #if UNITY_EDITOR
+
+    private void OnDrawGizmos()
+    {
+        for (int i = 0; i < _frames.Length; i++)
+        {
+            _frames[i].OnDrawGizmos();
+        }
+    }
+
     private static readonly Vector2 StandardDivision = new Vector2(1, 1);
     private static readonly Vector2 StandardPivot = new Vector2(0.5f, 0.5f);
 
@@ -87,6 +115,24 @@ public class Partition : MonoBehaviour
             }
         }
         UnityEditor.EditorApplication.delayCall += () => Resize();
+    }
+
+
+    [ContextMenu("화면 비율 확인하기")]
+    private void Log()
+    {
+        if (_ratio > 0)
+        {
+            Debug.Log("화면 비율 1:" + (_ratio + 1));
+        }
+        else if (_ratio < 0)
+        {
+            Debug.Log("화면 비율 " + (-_ratio + 1) + ":1");
+        }
+        else
+        {
+            Debug.Log("화면 비율 제한 없음");
+        }
     }
 #endif
 
@@ -134,23 +180,4 @@ public class Partition : MonoBehaviour
             }
         }
     }
-
-#if UNITY_EDITOR
-    [ContextMenu("화면 비율 확인하기")]
-    private void Log()
-    {
-        if (_ratio > 0)
-        {
-            Debug.Log("화면 비율 1:" + (_ratio + 1));
-        }
-        else if (_ratio < 0)
-        {
-            Debug.Log("화면 비율 " + (-_ratio + 1) + ":1");
-        }
-        else
-        {
-            Debug.Log("화면 비율 제한 없음");
-        }
-    }
-#endif
 }
