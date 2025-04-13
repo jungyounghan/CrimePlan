@@ -14,12 +14,12 @@ public class Person : MonoBehaviourPunCallbacks
 {
     public enum Form: byte
     {
-        Start,
-        Capper = 0,
+        Capper,
         Lady,
-        Strider,
-        End
+        Strider
     }
+
+    public static readonly int FormCount = (int)Form.Strider + 1;
 
     private bool _hasAnimator = false;
 
@@ -72,6 +72,15 @@ public class Person : MonoBehaviourPunCallbacks
     [SerializeField]
     private Renderer[] _renderers = new Renderer[2];
 
+    private bool _identification = false;
+
+    public bool identification {
+        get
+        {
+            return _identification;
+        }
+    }
+
     public bool alive
     {
         get
@@ -104,6 +113,12 @@ public class Person : MonoBehaviourPunCallbacks
         createAction?.Invoke(this);
     }
 
+    [PunRPC]
+    private void Set(bool identification)
+    {
+        _identification = identification;
+    }
+
     private string GetAnimationName()
     {
         AnimatorClipInfo[] animatorClipInfos = getAnimator.GetCurrentAnimatorClipInfo(0);
@@ -112,6 +127,15 @@ public class Person : MonoBehaviourPunCallbacks
             return animatorClipInfos[0].clip.name;
         }
         return null;
+    }
+
+    public void Initialize(bool identification)
+    {
+        Set(identification);
+        if (photonView.IsMine == true)
+        {
+            photonView.RPC("Set", RpcTarget.OthersBuffered, identification);
+        }
     }
 
     public override void OnRoomPropertiesUpdate(Hashtable hashtable)

@@ -1,12 +1,31 @@
 using UnityEngine;
 using Photon.Pun;
 using ExitGames.Client.Photon;
+using System;
 
 [DisallowMultipleComponent]
 public class StageController : MonoBehaviour
 {
+    private bool _hasTransform = false;
+
+    private Transform _transform = null;
+
+    private Transform getTransform {
+        get
+        {
+            if(_hasTransform == false)
+            {
+                _hasTransform = true;
+                _transform = transform;
+            }
+            return _transform;
+        }
+    }
+
     [SerializeField]
-    private Person[] _personPrefabs = new Person[(int)Person.Form.End];
+    private Person[] _personPrefabs = new Person[Person.FormCount];
+
+    private Action<Transform> _watchAction = null;
 
 #if UNITY_EDITOR
     [Header("테스트 모드")]
@@ -43,7 +62,7 @@ public class StageController : MonoBehaviour
                 break;
         }
         int length = _personPrefabs.Length;
-        int end = (int)Person.Form.End;
+        int end = Person.FormCount;
         if (length > end)
         {
             _personPrefabs = new Person[] { _personPrefabs[((int)Person.Form.Capper)], _personPrefabs[((int)Person.Form.Lady)], _personPrefabs[((int)Person.Form.Strider)] };
@@ -61,12 +80,27 @@ public class StageController : MonoBehaviour
             }
             ExtensionMethod.Sort(ref _personPrefabs);
         }
-        _personForm = (Person.Form)Mathf.Clamp((int)_personForm, (int)Person.Form.Start, (int)Person.Form.End - 1);
     }
 #endif
 
-    public void Initialize()
+    private void Awake()
     {
+        Person.createAction += Create;
+    }
+
+    private void OnDestroy()
+    {
+        Person.createAction -= Create;
+    }
+
+    private void Create(Person person)
+    {
+
+    }
+
+    public void Initialize(Action<Transform> watchAction)
+    {
+        _watchAction = watchAction;
         if (PhotonNetwork.IsMasterClient == true)
         {
             Debug.Log("방장");
@@ -74,9 +108,10 @@ public class StageController : MonoBehaviour
         else
         {
 #if UNITY_EDITOR
-            if(_personForm >= Person.Form.Start && (int)_personForm < _personPrefabs.Length)
+            if(_personPrefabs[(int)_personForm] != null)
             {
-
+                Person person = Instantiate(_personPrefabs[(int)_personForm], getTransform);
+                _watchAction?.Invoke(person.transform);
             }
 #endif
         }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using Cinemachine;
 using Photon.Pun;
 using ExitGames.Client.Photon;
 
@@ -54,10 +55,15 @@ public class GameManager : Manager
         _stageController?.UpdateMove();
     }
 
+    private void Watch(Transform transform)
+    {
+        FindObjectOfType<CinemachineVirtualCamera>().Set(transform);
+    }
+
     protected override void Initialize()
     {
         base.Initialize();
-        _stageController?.Initialize();
+        _stageController?.Initialize(Watch);
         getStateController.Initialize();
     }
 
