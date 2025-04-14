@@ -14,20 +14,23 @@ public class Test : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        int count = 0;
-
-        int halfColumns = columns / 2;
-        int halfRows = rows / 2;
-
+        int columns = 3;
+        int totalRows = Mathf.CeilToInt(playerCount / (float)columns);
         for (int i = 0; i < playerCount; i++)
         {
-            int xIndex = count % columns - halfColumns;
-            int zIndex = count / columns - halfRows;
+            int row = i / columns;
+            int indexInRow = i % columns;
 
-            Vector3 localOffset = new Vector3(xIndex * cellWidth, 0, zIndex * cellHeight);
+            // X축 정렬 (가운데 기준)
+            int itemsInThisRow = Mathf.Min(columns, playerCount - row * columns);
+            float centerOffsetX = (itemsInThisRow - 1) / 2f;
+            float x = (indexInRow - centerOffsetX) * cellWidth;
 
-            Debug.DrawRay(transform.position + startOffset + localOffset, Vector3.up, _gizmoColor);
-            count++;
+            // Y축 정렬 (가운데 기준)
+            float centerOffsetY = (totalRows - 1) / 2f;
+            float y = (row - centerOffsetY) * cellHeight;
+
+            Debug.DrawRay(new Vector3(x, 0, y), Vector3.up);
         }
     }
 }

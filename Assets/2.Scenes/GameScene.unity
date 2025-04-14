@@ -312,7 +312,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -58.88892, y: 0}
+  m_SizeDelta: {x: -62.074104, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &164158233
 MonoBehaviour:
@@ -404,7 +404,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8216624220347064655, guid: fbb42af593db4e2438629a4bb7f58fb9, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -742
+      value: -782.13336
       objectReference: {fileID: 0}
     - target: {fileID: 8216624220347064655, guid: fbb42af593db4e2438629a4bb7f58fb9, type: 3}
       propertyPath: m_SizeDelta.y
@@ -649,11 +649,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gizmoColor: {r: 0, g: 0, b: 1, a: 1}
-  playerCount: 8
+  playerCount: 10
   columns: 3
   rows: 2
-  cellWidth: -0.69
-  cellHeight: 1.11
+  cellWidth: 1
+  cellHeight: 1
   startOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &507233791 stripped
 GameObject:
@@ -906,7 +906,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 40.6
+  m_fontSize: 42.8
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1040,7 +1040,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 40.6
+  m_fontSize: 42.8
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1959,7 +1959,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 942664984128488255, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_SizeDelta.y
-      value: -397.6
+      value: -335.2
       objectReference: {fileID: 0}
     - target: {fileID: 2138080304985992918, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_Name
@@ -1979,11 +1979,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3196407016338818617, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -397.5
+      value: -419
       objectReference: {fileID: 0}
     - target: {fileID: 3196407016338818617, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_SizeDelta.y
-      value: -397.6
+      value: -335.2
       objectReference: {fileID: 0}
     - target: {fileID: 4043419619943543051, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_Pivot.x
@@ -2402,7 +2402,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20.3
+  m_fontSize: 21.4
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
