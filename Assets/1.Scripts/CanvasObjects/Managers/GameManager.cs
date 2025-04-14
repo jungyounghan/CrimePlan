@@ -1,7 +1,7 @@
 using UnityEngine;
-using Cinemachine;
 using Photon.Pun;
 using ExitGames.Client.Photon;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(StateController))]
 public class GameManager : Manager
@@ -22,15 +22,17 @@ public class GameManager : Manager
         }
     }
 
-    [Header(nameof(GameManager))]
-    [SerializeField]
+    [Header(nameof(GameManager)), SerializeField]
     private StageController _stageController;
 
     private double _waitingTime = 0;
 
-    public static readonly string SceneName = "GameScene";
-
     public const string TurnKey = "Turn";
+    public const string TimeKey = "Time";
+
+    private static readonly byte TurnLimitValue = 100;
+    private static readonly float TimeLimitValue = 10;
+    public static readonly string SceneName = "GameScene";
 
     private void Update()
     {
@@ -40,31 +42,40 @@ public class GameManager : Manager
             if (currentTime <= 0)
             {
                 _waitingTime = 0;
+                if (PhotonNetwork.IsMasterClient == true)
+                {
+                    Hashtable hashtable = PhotonNetwork.CurrentRoom.CustomProperties;
+                    int turn = hashtable.ContainsKey(TurnKey) && hashtable[TurnKey] != null && int.TryParse(hashtable[TurnKey].ToString(), out turn) ? turn : 0;
+                    switch(turn)
+                    {
+                        case 0:
+                            break;
+                        case 1:
+                            break;
+                        case 2:
+                            break;
+                    }
+                    PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, turn + 1 } });
+                }
             }
             else if (Input.GetMouseButtonDown(0))
             {
                 Camera camera = Camera.main;
                 if (camera != null)
-                {
-                    //누르고 명령 내리기(return 값이 있고 그것이 캔버스로 전송되게하자)
+                {                    //누르고 명령 내리기(return 값이 있고 그것이 캔버스로 전송되게하자)
                     _stageController?.UpdateInput(camera.ScreenPointToRay(Input.mousePosition)); 
                 }
             }
-            getStateController.SetTimer(currentTime);
+            getStateController.UpdateTime(currentTime);
         }
         _stageController?.UpdateMove();
     }
 
-    private void Watch(Transform transform)
-    {
-        FindObjectOfType<CinemachineVirtualCamera>().Set(transform);
-    }
-
     protected override void Initialize()
     {
-        base.Initialize();
-        _stageController?.Initialize(Watch);
-        getStateController.Initialize();
+        base.Initialize();        //_stageController?.Initialize(FindObjectOfType<CinemachineVirtualCamera>().Set(transform));        //getStateController.Initialize();
+        SetInteractable(true);
+        PhotonNetwork.ConnectUsingSettings();
     }
 
     protected override void ChangeText(Translation.Language language)
@@ -73,7 +84,6 @@ public class GameManager : Manager
         getStateController.ChangeText();
     }
 
-#if UNITY_EDITOR
     public override void OnConnectedToMaster()
     {
         PhotonNetwork.JoinLobby();
@@ -86,12 +96,55 @@ public class GameManager : Manager
 
     public override void OnJoinedRoom()
     {
-        _waitingTime = PhotonNetwork.Time + 10;
+        if (PhotonNetwork.IsMasterClient == true)
+        {
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue } });
+            _stageController?.Initialize((identity) => { getStateController.Set(identity); });
+        }
+        else
+        {
+            OnRoomPropertiesUpdate(PhotonNetwork.CurrentRoom.CustomProperties);
+        }
     }
-#endif
 
     public override void OnRoomPropertiesUpdate(Hashtable hashtable)
     {
-        _stageController?.OnRoomPropertiesUpdate(hashtable);
+        if (hashtable != null)
+        {
+            Dictionary<string, object> dictionary = new Dictionary<string, object>();
+            foreach (string key in hashtable.Keys)
+            {
+                switch(key)
+                {
+                    case TimeKey:
+                        if (hashtable[key] != null && float.TryParse(hashtable[key].ToString(), out float time) == true)
+                        {
+                            _waitingTime = time;
+                        }
+                        else
+                        {
+                            _waitingTime = 0;
+                        }
+                        break;
+                    case TurnKey:
+                        if (hashtable[key] != null && byte.TryParse(hashtable[key].ToString(), out byte turn) == true)
+                        {
+                            if(turn < TurnLimitValue)
+                            { 
+                                getStateController.OnRoomPropertiesUpdate(turn);
+                            }
+                            else if(_stageController != null)
+                            {
+                                //남은 플레이어 순으로 정산해서 누가 승리했는지 여부를 알려준다.
+                            }
+                        }
+                        else
+                        {
+                            getStateController.OnRoomPropertiesUpdate(0);
+                        }
+                        break;
+                }
+            }
+        }
     }
 }

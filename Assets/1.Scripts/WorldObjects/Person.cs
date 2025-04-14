@@ -5,8 +5,6 @@ using ExitGames.Client.Photon;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Animator))]
-[RequireComponent(typeof(Rigidbody))]
-[RequireComponent(typeof(SphereCollider))]
 [RequireComponent(typeof(PhotonView))]
 [RequireComponent(typeof(PhotonTransformView))]
 [RequireComponent(typeof(PhotonAnimatorView))]
@@ -37,41 +35,6 @@ public class Person : MonoBehaviourPunCallbacks
         }
     }
 
-    private bool _hasRigidbody = false;
-
-    private Rigidbody _rigidbody = null;
-
-    private Rigidbody getRigidbody
-    {
-        get
-        {
-            if (_hasRigidbody == false)
-            {
-                _hasRigidbody = TryGetComponent(out _rigidbody);
-            }
-            return _rigidbody;
-        }
-    }
-
-    private bool _hasSphereCollider = false;
-
-    private SphereCollider _sphereCollider = null;
-
-    private SphereCollider getSphereCollider
-    {
-        get
-        {
-            if (_hasSphereCollider == false)
-            {
-                _hasSphereCollider = TryGetComponent(out _sphereCollider);
-            }
-            return _sphereCollider;
-        }
-    }
-
-    [SerializeField]
-    private Renderer[] _renderers = new Renderer[2];
-
     private bool _identification = false;
 
     public bool identification {
@@ -85,28 +48,16 @@ public class Person : MonoBehaviourPunCallbacks
     {
         get
         {
-            return GetAnimationName() == FallingMotion;
+            return GetAnimationName() != FallingTag;
         }
     }
 
     public static event Action<Person> createAction = null;
 
-    private static readonly string FallingMotion = "Falling";
-    private static readonly Vector3 ColliderPoint = new Vector3(0, 0.5f, 0);
+    private static readonly string FallingTag = "Falling";
 
     public const bool Citizen = false;
     public const bool Criminal = true;
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        _renderers = GetComponentsInChildren<Renderer>();
-        getRigidbody.useGravity = true;
-        getRigidbody.freezeRotation = true;
-        getSphereCollider.center = ColliderPoint;
-        getSphereCollider.isTrigger = false;
-    }
-#endif
 
     private void Awake()
     {
@@ -114,8 +65,9 @@ public class Person : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    private void Set(bool identification)
+    private void Set(string name, bool identification)
     {
+        this.name = name;
         _identification = identification;
     }
 
@@ -129,12 +81,12 @@ public class Person : MonoBehaviourPunCallbacks
         return null;
     }
 
-    public void Initialize(bool identification)
+    public void Initialize(string name, bool identification)
     {
-        Set(identification);
+        Set(name, identification);
         if (photonView.IsMine == true)
         {
-            photonView.RPC("Set", RpcTarget.OthersBuffered, identification);
+            photonView.RPC("Set", RpcTarget.OthersBuffered, name, identification);
         }
     }
 

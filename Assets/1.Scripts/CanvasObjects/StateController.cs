@@ -1,8 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using Photon.Pun;
-using ExitGames.Client.Photon;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Canvas))]
@@ -23,11 +21,15 @@ public class StateController : MonoBehaviour
 
     public void Initialize()
     {
-        Hashtable hashtable = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.CustomProperties: null;
-        OnRoomPropertiesUpdate(hashtable);
+
     }
 
-    public void SetTimer(double value)
+    public void Set(bool identity)
+    {
+        Debug.Log(identity);
+    }
+
+    public void UpdateTime(double value)
     {
         _timerText.Set(value > 0 ? Mathf.Floor((float)value).ToString(): null);
     }
@@ -39,38 +41,9 @@ public class StateController : MonoBehaviour
         _turnText.Set(string.Format(Translation.Get(Translation.Letter.Day), day.ToString("D2")) + " " + Translation.Get(segment));
     }
 
-    public void OnRoomPropertiesUpdate(Hashtable hashtable)
+    public void OnRoomPropertiesUpdate(byte turn)
     {
-        if(hashtable != null)
-        {
-            foreach(string key in hashtable.Keys)
-            {
-                switch(key)
-                {
-                    case GameManager.TurnKey:
-                        if (hashtable[key] != null && int.TryParse(hashtable[key].ToString(), out int turn) == true && turn >= byte.MinValue && turn <= byte.MaxValue)
-                        {
-                            _turn = (byte)turn;
-                        }
-                        else
-                        {
-                            _turn = 0;
-                        }
-                        break;
-                    default:
-                        if (PhotonNetwork.InRoom == true && PhotonNetwork.LocalPlayer.UserId == key)
-                        {
-
-                        }
-                        else
-                        {
-#if UNITY_EDITOR
-                            //여기는 싱글 모드
-#endif
-                        }
-                        break;
-                }
-            }
-        }
+        _turn = turn;
+        ChangeText();
     }
 }

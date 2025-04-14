@@ -1,7 +1,9 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
+using Photon.Realtime;
 using ExitGames.Client.Photon;
-using System;
 
 [DisallowMultipleComponent]
 public class StageController : MonoBehaviour
@@ -25,7 +27,9 @@ public class StageController : MonoBehaviour
     [SerializeField]
     private Person[] _personPrefabs = new Person[Person.FormCount];
 
-    private Action<Transform> _watchAction = null;
+    private Dictionary<string, Person> _personDictionary = new Dictionary<string, Person>();
+
+    private Action<bool> _identityAction = null;
 
 #if UNITY_EDITOR
     [Header("테스트 모드")]
@@ -83,10 +87,10 @@ public class StageController : MonoBehaviour
     }
 #endif
 
-    private void Awake()
-    {
-        Person.createAction += Create;
-    }
+    public int columns = 3;
+    public float cellWidth = 2f;
+    public float cellHeight = 2f;
+    public Vector3 startOffset = Vector3.zero;
 
     private void OnDestroy()
     {
@@ -95,25 +99,40 @@ public class StageController : MonoBehaviour
 
     private void Create(Person person)
     {
+        if(person != null)
+        {
+            _personDictionary[person.name] = person;
+            _personDictionary[person.name].transform.parent = getTransform;
+            Debug.Log("생성");
+            if (PhotonNetwork.LocalPlayer.UserId == person.name)
+            {
 
+            }
+        }
     }
 
-    public void Initialize(Action<Transform> watchAction)
+    public void Initialize(Action<bool> action)
     {
-        _watchAction = watchAction;
+        _identityAction = action;
         if (PhotonNetwork.IsMasterClient == true)
         {
-            Debug.Log("방장");
+            Dictionary<int, Player> players = PhotonNetwork.CurrentRoom.Players;
+            int count = 0;
+            for (int i = 0; i < 5; i++)
+            //foreach(Player player in players.Values)
+            {
+                int row = count / columns;
+                int col = count % columns;
+
+                Vector3 position = startOffset + new Vector3(col * cellWidth, 0, row * cellHeight);
+                //GameObject gameObject = PhotonNetwork.InstantiateRoomObject(_personPrefabs[0].name, position, Quaternion.identity);
+                //gameObject.GetComponent<Person>().Initialize();
+                count++;
+            }
         }
         else
         {
-#if UNITY_EDITOR
-            if(_personPrefabs[(int)_personForm] != null)
-            {
-                Person person = Instantiate(_personPrefabs[(int)_personForm], getTransform);
-                _watchAction?.Invoke(person.transform);
-            }
-#endif
+            Person.createAction += Create;
         }
     }
 
@@ -132,9 +151,5 @@ public class StageController : MonoBehaviour
     public void UpdateMove()
     {
         //플레이어 애니메이션의 변화가 생기면 콜백으로 GameManager에 호출하기
-    }
-
-    public void OnRoomPropertiesUpdate(Hashtable hashtable)
-    {
     }
 }
