@@ -4,6 +4,8 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
+using UnityEngine.UIElements;
+using System.Linq;
 
 [DisallowMultipleComponent]
 public class StageController : MonoBehaviour
@@ -30,6 +32,8 @@ public class StageController : MonoBehaviour
     private Dictionary<string, Person> _personDictionary = new Dictionary<string, Person>();
 
     private Action<bool> _identityAction = null;
+
+    private static readonly int PersonSpacing = 3;
 
 #if UNITY_EDITOR
     [Header("테스트 모드")]
@@ -87,11 +91,6 @@ public class StageController : MonoBehaviour
     }
 #endif
 
-    public int columns = 3;
-    public float cellWidth = 2f;
-    public float cellHeight = 2f;
-    public Vector3 startOffset = Vector3.zero;
-
     private void OnDestroy()
     {
         Person.createAction -= Create;
@@ -103,7 +102,6 @@ public class StageController : MonoBehaviour
         {
             _personDictionary[person.name] = person;
             _personDictionary[person.name].transform.parent = getTransform;
-            Debug.Log("생성");
             if (PhotonNetwork.LocalPlayer.UserId == person.name)
             {
 
@@ -114,25 +112,44 @@ public class StageController : MonoBehaviour
     public void Initialize(Action<bool> action)
     {
         _identityAction = action;
-        if (PhotonNetwork.IsMasterClient == true)
-        {
-            Dictionary<int, Player> players = PhotonNetwork.CurrentRoom.Players;
-            int count = 0;
-            for (int i = 0; i < 5; i++)
-            //foreach(Player player in players.Values)
-            {
-                int row = count / columns;
-                int col = count % columns;
-
-                Vector3 position = startOffset + new Vector3(col * cellWidth, 0, row * cellHeight);
-                //GameObject gameObject = PhotonNetwork.InstantiateRoomObject(_personPrefabs[0].name, position, Quaternion.identity);
-                //gameObject.GetComponent<Person>().Initialize();
-                count++;
-            }
-        }
-        else
+        if (PhotonNetwork.IsMasterClient == false)
         {
             Person.createAction += Create;
+        }
+        else if(_personPrefabs.Length == Person.FormCount && _personPrefabs[((int)Person.Form.Capper)] != null && _personPrefabs[((int)Person.Form.Lady)] != null && _personPrefabs[((int)Person.Form.Strider)] != null)
+        {
+            Dictionary<int, Player> players = PhotonNetwork.CurrentRoom.Players;
+            List<(string, byte, bool)> list = new List<(string, byte, bool)>();
+            int citizenCount = 0;
+            int criminalCount = 0;
+            foreach (Player player in players.Values)
+            {
+                Hashtable hashtable = player.CustomProperties;
+                byte form = hashtable != null && hashtable.ContainsKey(RoomManager.PersonFormKey) && hashtable[RoomManager.PersonFormKey] != null && byte.TryParse(hashtable[RoomManager.PersonFormKey].ToString(), out form) ? form : (byte)0;
+                if (form > (int)Person.Form.Strider)
+                {
+                    form = (byte)Person.Form.Strider;
+                }
+                bool identity = hashtable != null && hashtable.ContainsKey(RoomManager.IdentityKey) && hashtable[RoomManager.IdentityKey] != null && bool.TryParse(hashtable[RoomManager.IdentityKey].ToString(), out identity) ? identity : false;
+                switch(identity)
+                {
+                    case Person.Citizen:
+                        citizenCount++;
+                        break;
+                    case Person.Criminal:
+                        criminalCount++;
+                        break;
+                }
+                list.Add((player.UserId, form, identity));
+            }
+            for(int i = citizenCount; i < criminalCount * 2 + 1; i++)
+            {
+                list.Add((null, (byte)UnityEngine.Random.Range(0, Person.FormCount), false));
+            }
+            for (int i = criminalCount; i < (citizenCount - 1) / 2; i++)
+            {
+                // 마피아 추가 로직
+            }   
         }
     }
 

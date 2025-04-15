@@ -12,6 +12,13 @@ public class Test : MonoBehaviour
     public float cellHeight = 2f;
     public Vector3 startOffset = Vector3.zero;
 
+
+    private void OnValidate()
+    {
+        //int allPersonCount = playerCount % 2 == 0 ? playerCount * 2 : playerCount + playerCount + 1;
+        //Debug.Log(allPersonCount);
+    }
+
     private void OnDrawGizmos()
     {
         int columns = 3;
