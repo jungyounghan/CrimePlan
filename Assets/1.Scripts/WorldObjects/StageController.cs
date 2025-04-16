@@ -110,7 +110,7 @@ public class StageController : MonoBehaviour
                         criminalCount++;
                         break;
                 }
-                list.Add((form, player.UserId, identity));
+                list.Add((form, player.NickName, identity));
             }
             int botIndex = 0;
             if(criminalCount == 0)
@@ -135,8 +135,58 @@ public class StageController : MonoBehaviour
                 float y = (row - ((totalRows - 1) / 2f)) * PersonSpaceInterval.y; // Y축 정렬 (가운데 기준)
                 GameObject gameObject = PhotonNetwork.InstantiateRoomObject(_personPrefabs[list[i].Item1].name, new Vector3(x, 0, y), Quaternion.identity);
                 gameObject.transform.parent = getTransform;
-                Person person = gameObject.GetComponent<Person>();
-                person.Initialize(list[i].Item2, list[i].Item3);
+                gameObject.GetComponent<Person>().Initialize(list[i].Item2, list[i].Item3);
+            }
+        }
+    }
+
+    public void UpdateTurn()
+    {
+        Room room = PhotonNetwork.CurrentRoom;
+        Hashtable hashtable = room != null ? room.CustomProperties : null;
+        if (hashtable != null)
+        {
+            byte turn = 0;
+            Dictionary<string, string> members = new Dictionary<string, string>();
+            foreach (string key in hashtable.Keys)
+            {
+                if (hashtable[key] != null)
+                {
+                    switch (key)
+                    {
+                        case GameManager.TurnKey:
+                            byte.TryParse(hashtable[key].ToString(), out turn);
+                            break;
+                        case GameManager.TimeKey:
+                            break;
+                        default:
+                            members.Add(key, hashtable[key].ToString());
+                            break;
+                    }
+                }
+            }
+            //Dictionary<string, int> votes
+            foreach (Person person in _personList)
+            {
+                if (person != null && person.alive == true && members.ContainsKey(person.name) == true) //해당 플레이어가 살아있으면 영향력을 행사할 수 있는 투표권임
+                {
+
+                }
+            }
+
+
+            switch ((GameManager.Cycle)(turn % (int)GameManager.Cycle.End))       //자기가 조종하는 플레이어를 자기 스스로 죽인다.(조종자가 없다면 마스터가 죽인다)
+            {
+                case GameManager.Cycle.Morning:
+                    break;
+                case GameManager.Cycle.Midday:
+                    break;
+                case GameManager.Cycle.Evening:
+                    break;
+            }
+            if (PhotonNetwork.IsMasterClient == true)
+            {
+                //PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, turn + 1 } });
             }
         }
     }
@@ -151,10 +201,5 @@ public class StageController : MonoBehaviour
             //    comp.OnClicked();
             //}
         }
-    }
-
-    public void UpdateMove()
-    {
-        //플레이어 애니메이션의 변화가 생기면 콜백으로 GameManager에 호출하기
     }
 }

@@ -22,9 +22,8 @@ public class StateController : MonoBehaviour
 
     private void SetTurnText()
     {
-        int day = _turn / DaySegmentValue;
-        Translation.Letter segment = (Translation.Letter)((_turn % DaySegmentValue) + (int)Translation.Letter.Morning);
-        _turnText.Set(string.Format(Translation.Get(Translation.Letter.Day), day.ToString("D2")) + " " + Translation.Get(segment));
+        Translation.Letter segment = (Translation.Letter)((_turn % (int)GameManager.Cycle.End) + (int)Translation.Letter.Morning);
+        _turnText.Set(string.Format(Translation.Get(Translation.Letter.Day), (_turn / (int)GameManager.Cycle.End).ToString("D2")) + " " + Translation.Get(segment));
     }
 
     private void SetRemainingText()

@@ -26,13 +26,20 @@ public class GameManager : Manager
     [Header(nameof(GameManager)), SerializeField]
     private StageController _stageController;
 
+    public enum Cycle: byte
+    {
+        Morning,
+        Midday,
+        Evening,
+        End
+    }
+
     private double _waitingTime = 0;
 
     public const string TurnKey = "Turn";
     public const string TimeKey = "Time";
 
-    private static readonly float TimeLimitValue = 10;
-    public static readonly int DaySegmentValue = 3;
+    public static readonly float TimeLimitValue = 10;
     public static readonly string SceneName = "GameScene";
 
     private void Update()
@@ -43,34 +50,7 @@ public class GameManager : Manager
             if (currentTime <= 0)
             {
                 _waitingTime = 0;
-                if (PhotonNetwork.IsMasterClient == true)
-                {
-                    Hashtable hashtable = PhotonNetwork.CurrentRoom.CustomProperties;
-                    byte turn = 0;
-                    foreach(string key in hashtable.Keys)
-                    {
-                        if (hashtable[key] != null)
-                        {
-                            switch (key)
-                            {
-                                case TurnKey:
-                                    byte.TryParse(hashtable[key].ToString(), out turn);
-                                    break;
-                            }
-                        }
-                    }
-                    hashtable = new Hashtable() {  { TimeKey, PhotonNetwork.Time + TimeLimitValue } };
-                    switch(turn % DaySegmentValue)
-                    {
-                        case 0: //아침
-                            break;
-                        case 1: //점심
-                            break;
-                        case 2: //저녁
-                            break;
-                    }
-                    //PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { , { TurnKey, turn + 1 } });
-                }
+                _stageController?.UpdateTurn();
             }
             else if (Input.GetMouseButtonDown(0))
             {
@@ -78,7 +58,6 @@ public class GameManager : Manager
             }
             getStateController.UpdateTime(currentTime);
         }
-        _stageController?.UpdateMove();
     }
 
     protected override void Initialize()
@@ -93,7 +72,12 @@ public class GameManager : Manager
         else
         {
             Room room = PhotonNetwork.CurrentRoom;
-            if(room != null)
+            Dictionary<int, Player> players = PhotonNetwork.CurrentRoom.Players;
+            foreach (KeyValuePair<int, Player> keyValuePair in players)
+            {
+                Debug.Log(keyValuePair.Value.UserId);
+            }
+            if (room != null)
             {
                 OnRoomPropertiesUpdate(room.CustomProperties);
             }

@@ -1,6 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
-using Photon.Pun;
 using TMPro;
+using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
 
@@ -31,6 +32,17 @@ public class RoomManager : Manager
 
     public override void OnJoinedRoom()
     {
+        #region 나중에는 지워주자        
+        Dictionary<int, Player> players = PhotonNetwork.CurrentRoom.Players;
+        foreach (Player player in players.Values)
+        {
+            if (player == PhotonNetwork.LocalPlayer)
+            {
+                PhotonNetwork.NickName = player.UserId;
+                break;
+            }
+        }
+        #endregion
         _testText.Set(PhotonNetwork.CurrentRoom.PlayerCount.ToString());
     }
 
