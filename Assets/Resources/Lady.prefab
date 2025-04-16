@@ -496,11 +496,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6283028475590508216}
   - component: {fileID: 6900725372001458501}
-  - component: {fileID: 5993284093668163906}
-  - component: {fileID: 6685511558040906171}
   - component: {fileID: 447763084307782322}
   - component: {fileID: 9132940633245286723}
-  - component: {fileID: 2839231976975160164}
   - component: {fileID: 2699338303868616470}
   m_Layer: 0
   m_Name: Lady
@@ -547,54 +544,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!54 &5993284093668163906
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3895357706271902453}
-  serializedVersion: 4
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 112
-  m_CollisionDetection: 0
---- !u!135 &6685511558040906171
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3895357706271902453}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!114 &447763084307782322
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -615,7 +564,6 @@ MonoBehaviour:
   observableSearch: 2
   ObservedComponents:
   - {fileID: 9132940633245286723}
-  - {fileID: 2839231976975160164}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -635,27 +583,6 @@ MonoBehaviour:
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
   m_UseLocal: 1
---- !u!114 &2839231976975160164
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3895357706271902453}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b8c4a61274f60b4ea5fb4299cfdbf14, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowLayerWeightsInspector: 1
-  ShowParameterInspector: 1
-  m_SynchronizeParameters:
-  - Type: 9
-    SynchronizeType: 0
-    Name: Falling
-  m_SynchronizeLayers:
-  - SynchronizeType: 0
-    LayerIndex: 0
 --- !u!114 &2699338303868616470
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -668,9 +595,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95ef35229e2aa424fb4dd69fd5eda0db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _renderers:
-  - {fileID: 6132914326131338682}
-  - {fileID: 9062243820043918416}
+  _identification: 0
 --- !u!1 &4016738414748504174
 GameObject:
   m_ObjectHideFlags: 0

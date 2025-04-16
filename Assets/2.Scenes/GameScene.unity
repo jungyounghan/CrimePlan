@@ -312,7 +312,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -58.88892, y: 0}
+  m_SizeDelta: {x: -142.22229, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &164158233
 MonoBehaviour:
@@ -404,7 +404,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8216624220347064655, guid: fbb42af593db4e2438629a4bb7f58fb9, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -742
+      value: -1792
       objectReference: {fileID: 0}
     - target: {fileID: 8216624220347064655, guid: fbb42af593db4e2438629a4bb7f58fb9, type: 3}
       propertyPath: m_SizeDelta.y
@@ -902,7 +902,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 40.6
+  m_fontSize: 98.15
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1036,7 +1036,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 40.6
+  m_fontSize: 98.15
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1955,7 +1955,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 942664984128488255, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_SizeDelta.y
-      value: -397.6
+      value: -864
       objectReference: {fileID: 0}
     - target: {fileID: 2138080304985992918, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_Name
@@ -1975,11 +1975,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3196407016338818617, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -397.5
+      value: -960
       objectReference: {fileID: 0}
     - target: {fileID: 3196407016338818617, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_SizeDelta.y
-      value: -397.6
+      value: -864
       objectReference: {fileID: 0}
     - target: {fileID: 4043419619943543051, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_Pivot.x
@@ -2398,7 +2398,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20.3
+  m_fontSize: 49.05
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

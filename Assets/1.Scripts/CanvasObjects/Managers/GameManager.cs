@@ -30,7 +30,6 @@ public class GameManager : Manager
     public const string TurnKey = "Turn";
     public const string TimeKey = "Time";
 
-    private static readonly byte TurnLimitValue = 100;
     private static readonly float TimeLimitValue = 10;
     public static readonly string SceneName = "GameScene";
 
@@ -129,14 +128,7 @@ public class GameManager : Manager
                     case TurnKey:
                         if (hashtable[key] != null && byte.TryParse(hashtable[key].ToString(), out byte turn) == true)
                         {
-                            if(turn < TurnLimitValue)
-                            { 
-                                getStateController.OnRoomPropertiesUpdate(turn);
-                            }
-                            else if(_stageController != null)
-                            {
-                                //남은 플레이어 순으로 정산해서 누가 승리했는지 여부를 알려준다.
-                            }
+                            getStateController.OnRoomPropertiesUpdate(turn);
                         }
                         else
                         {

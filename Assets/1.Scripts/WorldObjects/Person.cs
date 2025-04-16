@@ -1,13 +1,12 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Photon.Pun;
-using ExitGames.Client.Photon;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(PhotonView))]
 [RequireComponent(typeof(PhotonTransformView))]
-[RequireComponent(typeof(PhotonAnimatorView))]
 public class Person : MonoBehaviourPunCallbacks
 {
     public enum Form: byte
@@ -35,6 +34,7 @@ public class Person : MonoBehaviourPunCallbacks
         }
     }
 
+    [SerializeField]
     private bool _identification = false;
 
     public bool identification {
@@ -48,7 +48,7 @@ public class Person : MonoBehaviourPunCallbacks
     {
         get
         {
-            return GetAnimationName() != FallingTag;
+            return getAnimator.GetCurrentAnimatorStateInfo(0).shortNameHash == Animator.StringToHash(FallingTag);
         }
     }
 
@@ -58,6 +58,13 @@ public class Person : MonoBehaviourPunCallbacks
 
     public const bool Citizen = false;
     public const bool Criminal = true;
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        Set(name, _identification);
+    }
+#endif
 
     private void Awake()
     {
@@ -71,27 +78,67 @@ public class Person : MonoBehaviourPunCallbacks
         _identification = identification;
     }
 
-    private string GetAnimationName()
+    [PunRPC]
+    private void SetTrigger(string tag)
     {
-        AnimatorClipInfo[] animatorClipInfos = getAnimator.GetCurrentAnimatorClipInfo(0);
-        if (animatorClipInfos.Length > 0 && animatorClipInfos[0].clip != null)
-        {
-            return animatorClipInfos[0].clip.name;
-        }
-        return null;
+        Debug.Log("SetTrigger");
+        getAnimator.SetTrigger(tag);
+    }
+
+    [PunRPC]
+    private void SetPose(string tag)
+    {
+        Debug.Log("SetPose");
+        getAnimator.Play(tag, 0, 1f); //해당 포즈로 즉시 재생
     }
 
     public void Initialize(string name, bool identification)
     {
         Set(name, identification);
-        if (photonView.IsMine == true)
+        if (PhotonNetwork.IsMasterClient == true)
         {
             photonView.RPC("Set", RpcTarget.OthersBuffered, name, identification);
         }
     }
 
-    public override void OnRoomPropertiesUpdate(Hashtable hashtable)
+    public void Kill()
     {
+        SetTrigger(FallingTag);
+        if (PhotonNetwork.IsMasterClient == true)
+        {
+            photonView.RPC("SetTrigger", RpcTarget.OthersBuffered, FallingTag);
+            StartCoroutine(DoAnimationUntilDone());
+            IEnumerator DoAnimationUntilDone()
+            {
+                yield return new WaitUntil(() => getAnimator.GetCurrentAnimatorStateInfo(0).shortNameHash == Animator.StringToHash(FallingTag));
+                yield return new WaitWhile(() => getAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1f);
+                SetPose(FallingTag);
+                photonView.RPC("SetPose", RpcTarget.OthersBuffered, FallingTag);
+            }
+        }
+    }
 
+    public override void OnEnable()
+    {
+        if (PhotonNetwork.IsMasterClient == true)
+        {
+            AnimatorStateInfo animatorStateInfo = getAnimator.GetCurrentAnimatorStateInfo(0);
+            if(animatorStateInfo.shortNameHash == Animator.StringToHash(FallingTag) && animatorStateInfo.normalizedTime < 1f)
+            {
+                StartCoroutine(DoAnimationUntilDone());
+                IEnumerator DoAnimationUntilDone()
+                {
+                    yield return new WaitWhile(() => getAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1f);
+                    SetPose(FallingTag);
+                    photonView.RPC("SetPose", RpcTarget.OthersBuffered, FallingTag);
+                }
+            }
+        }
+    }
+
+    public override void OnDisable()
+    {
+        base.OnDisable();
+        StopAllCoroutines();
     }
 }
