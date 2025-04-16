@@ -28,9 +28,9 @@ public class StageController : MonoBehaviour
     [SerializeField]
     private Person[] _personPrefabs = new Person[Person.FormCount];
 
-    private Dictionary<string, Person> _personDictionary = new Dictionary<string, Person>();
+    private List<Person> _personList = new List<Person>();
 
-    private Action<bool> _identityAction = null;
+    private Action<IEnumerable<Person>> _personAction = null;
 
     private static readonly int PersonWidthAlignmentCount = 3;
     private static readonly string PersonBotTag = "PersonBot";
@@ -42,34 +42,9 @@ public class StageController : MonoBehaviour
     private Person.Form _personForm = Person.Form.Capper;
     [SerializeField]
     private bool _identity = Person.Citizen;
-    [SerializeField]
-    private uint _citizenCount = 1;
-    [SerializeField]
-    private uint _policeCount = 0;
-    [SerializeField]
-    private uint _criminalCount = 0;
 
     private void OnValidate()
     {
-        if (_citizenCount == 0)
-        {
-            _citizenCount = 1;
-        }
-        switch(_identity)
-        {
-            case Person.Citizen:
-                if (_criminalCount == 0)
-                {
-                    _criminalCount = 1;
-                }
-                break;
-            case Person.Criminal:
-                if (_policeCount == 0)
-                {
-                    _policeCount = 1;
-                }
-                break;
-        }
         int length = _personPrefabs.Length;
         int end = Person.FormCount;
         if (length > end)
@@ -99,25 +74,19 @@ public class StageController : MonoBehaviour
 
     private void Create(Person person)
     {
-        if(person != null)
+        if (person != null)
         {
-            _personDictionary[person.name] = person;
-            _personDictionary[person.name].transform.parent = getTransform;
-            if (PhotonNetwork.LocalPlayer.UserId == person.name)
-            {
-
-            }
+            person.transform.parent = getTransform;
+            _personList.Add(person);
+            _personAction?.Invoke(_personList);
         }
     }
 
-    public void Initialize(Action<bool> action)
+    public void Initialize(Action<IEnumerable<Person>> action)
     {
-        _identityAction = action;
-        if (PhotonNetwork.IsMasterClient == false)
-        {
-            Person.createAction += Create;
-        }
-        else if(_personPrefabs.Length == Person.FormCount && _personPrefabs[((int)Person.Form.Capper)] != null && _personPrefabs[((int)Person.Form.Lady)] != null && _personPrefabs[((int)Person.Form.Strider)] != null)
+        _personAction = action;
+        Person.createAction += Create;
+        if(PhotonNetwork.IsMasterClient == true && _personPrefabs.Length == Person.FormCount && _personPrefabs[((int)Person.Form.Capper)] != null && _personPrefabs[((int)Person.Form.Lady)] != null && _personPrefabs[((int)Person.Form.Strider)] != null)
         {
             Dictionary<int, Player> players = PhotonNetwork.CurrentRoom.Players;
             List<(byte, string, bool)> list = new List<(byte, string, bool)>();
@@ -168,15 +137,13 @@ public class StageController : MonoBehaviour
                 gameObject.transform.parent = getTransform;
                 Person person = gameObject.GetComponent<Person>();
                 person.Initialize(list[i].Item2, list[i].Item3);
-                _personDictionary[person.name] = person;
-                person.Kill();
             }
         }
     }
 
-    public void UpdateInput(Ray ray)
+    public void UpdateInput(Camera camera)
     {
-        if (Physics.Raycast(ray, out RaycastHit hit) == true)
+        if (camera != null && Physics.Raycast(camera.ScreenPointToRay(Input.mousePosition), out RaycastHit hit) == true)
         {
             //var comp = hit.collider.GetComponent<MyComponent>();
             //if (comp != null)

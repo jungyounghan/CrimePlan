@@ -1,7 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
+using Photon.Realtime;
 using ExitGames.Client.Photon;
-using System.Collections.Generic;
 
 [RequireComponent(typeof(StateController))]
 public class GameManager : Manager
@@ -31,6 +32,7 @@ public class GameManager : Manager
     public const string TimeKey = "Time";
 
     private static readonly float TimeLimitValue = 10;
+    public static readonly int DaySegmentValue = 3;
     public static readonly string SceneName = "GameScene";
 
     private void Update()
@@ -44,26 +46,35 @@ public class GameManager : Manager
                 if (PhotonNetwork.IsMasterClient == true)
                 {
                     Hashtable hashtable = PhotonNetwork.CurrentRoom.CustomProperties;
-                    int turn = hashtable.ContainsKey(TurnKey) && hashtable[TurnKey] != null && int.TryParse(hashtable[TurnKey].ToString(), out turn) ? turn : 0;
-                    switch(turn)
+                    byte turn = 0;
+                    foreach(string key in hashtable.Keys)
                     {
-                        case 0:
+                        if (hashtable[key] != null)
+                        {
+                            switch (key)
+                            {
+                                case TurnKey:
+                                    byte.TryParse(hashtable[key].ToString(), out turn);
+                                    break;
+                            }
+                        }
+                    }
+                    hashtable = new Hashtable() {  { TimeKey, PhotonNetwork.Time + TimeLimitValue } };
+                    switch(turn % DaySegmentValue)
+                    {
+                        case 0: //아침
                             break;
-                        case 1:
+                        case 1: //점심
                             break;
-                        case 2:
+                        case 2: //저녁
                             break;
                     }
-                    PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, turn + 1 } });
+                    //PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { , { TurnKey, turn + 1 } });
                 }
             }
             else if (Input.GetMouseButtonDown(0))
             {
-                Camera camera = Camera.main;
-                if (camera != null)
-                {                    //누르고 명령 내리기(return 값이 있고 그것이 캔버스로 전송되게하자)
-                    _stageController?.UpdateInput(camera.ScreenPointToRay(Input.mousePosition)); 
-                }
+                //_stageController?.UpdateInput(Camera.main); //누르고 명령 내리기(return 값이 있고 그것이 캔버스로 전송되게하자)
             }
             getStateController.UpdateTime(currentTime);
         }
@@ -72,38 +83,33 @@ public class GameManager : Manager
 
     protected override void Initialize()
     {
-        base.Initialize();        //_stageController?.Initialize(FindObjectOfType<CinemachineVirtualCamera>().Set(transform));        //getStateController.Initialize();
+        base.Initialize();
         SetInteractable(true);
-        PhotonNetwork.ConnectUsingSettings();
+        _stageController?.Initialize((value) => { getStateController.SetMember(value); });
+        if (PhotonNetwork.IsMasterClient == true)
+        {
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue } });
+        }
+        else
+        {
+            Room room = PhotonNetwork.CurrentRoom;
+            if(room != null)
+            {
+                OnRoomPropertiesUpdate(room.CustomProperties);
+            }
+            else
+            {
+#if UNITY_EDITOR
+                Debug.LogError("방에 접속되어 있지 않음");
+#endif
+            }
+        }
     }
 
     protected override void ChangeText(Translation.Language language)
     {
         base.ChangeText(language);
         getStateController.ChangeText();
-    }
-
-    public override void OnConnectedToMaster()
-    {
-        PhotonNetwork.JoinLobby();
-    }
-
-    public override void OnJoinedLobby()
-    {
-        PhotonNetwork.JoinRandomOrCreateRoom();
-    }
-
-    public override void OnJoinedRoom()
-    {
-        if (PhotonNetwork.IsMasterClient == true)
-        {
-            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue } });
-            _stageController?.Initialize((identity) => { getStateController.Set(identity); });
-        }
-        else
-        {
-            OnRoomPropertiesUpdate(PhotonNetwork.CurrentRoom.CustomProperties);
-        }
     }
 
     public override void OnRoomPropertiesUpdate(Hashtable hashtable)

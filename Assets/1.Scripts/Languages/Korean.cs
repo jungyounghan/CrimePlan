@@ -68,6 +68,15 @@ public static class Korean
                 case Translation.Letter.Evening:
                     letters[i] = "저녁";
                     break;
+                case Translation.Letter.Survivor:
+                    letters[i] = "생존자";
+                    break;
+                case Translation.Letter.Citizen:
+                    letters[i] = "시민";
+                    break;
+                case Translation.Letter.Criminal:
+                    letters[i] = "범인";
+                    break;
 
                 case Translation.Letter.Identification:
                     letters[i] = "아이디";
@@ -82,6 +91,7 @@ public static class Korean
                     letters[i] = "로그인";
                     break;
 
+
                 case Translation.Letter.RequestValid:
                     letters[i] = "올바른 {0}를 입력해주세요";
                     break;
@@ -92,6 +102,9 @@ public static class Korean
                     letters[i] = "이 계정은 현재 접속중입니다";
                     break;
 
+                case Translation.Letter.Remaining:
+                    letters[i] = "남은 {0}";
+                    break;
                 case Translation.Letter.DoYouWantTo:
                     letters[i] = "{0} 하시겠습니까?";
                     break;

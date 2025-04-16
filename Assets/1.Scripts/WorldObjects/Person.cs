@@ -66,29 +66,23 @@ public class Person : MonoBehaviourPunCallbacks
     }
 #endif
 
-    private void Awake()
-    {
-        createAction?.Invoke(this);
-    }
-
     [PunRPC]
     private void Set(string name, bool identification)
     {
         this.name = name;
         _identification = identification;
+        createAction?.Invoke(this);
     }
 
     [PunRPC]
     private void SetTrigger(string tag)
     {
-        Debug.Log("SetTrigger");
         getAnimator.SetTrigger(tag);
     }
 
     [PunRPC]
     private void SetPose(string tag)
     {
-        Debug.Log("SetPose");
         getAnimator.Play(tag, 0, 1f); //해당 포즈로 즉시 재생
     }
 
@@ -106,7 +100,7 @@ public class Person : MonoBehaviourPunCallbacks
         SetTrigger(FallingTag);
         if (PhotonNetwork.IsMasterClient == true)
         {
-            photonView.RPC("SetTrigger", RpcTarget.OthersBuffered, FallingTag);
+            photonView.RPC("SetTrigger", RpcTarget.Others, FallingTag);
             StartCoroutine(DoAnimationUntilDone());
             IEnumerator DoAnimationUntilDone()
             {

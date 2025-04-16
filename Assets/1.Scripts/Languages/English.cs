@@ -68,6 +68,15 @@ public static class English
                 case Translation.Letter.Evening:
                     letters[i] = "Evening";
                     break;
+                case Translation.Letter.Survivor:
+                    letters[i] = "Survivor";
+                    break;
+                case Translation.Letter.Citizen:
+                    letters[i] = "Citizen";
+                    break;
+                case Translation.Letter.Criminal:
+                    letters[i] = "Criminal";
+                    break;
 
                 case Translation.Letter.Identification:
                     letters[i] = "User Id";
@@ -92,6 +101,9 @@ public static class English
                     letters[i] = "This Account is Currently Logged in";
                     break;
 
+                case Translation.Letter.Remaining:
+                    letters[i] = "Remaining {0}";
+                    break;
                 case Translation.Letter.DoYouWantTo:
                     letters[i] = "Do You Want to {0}?";
                     break;

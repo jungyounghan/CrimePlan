@@ -31,6 +31,9 @@ public static class Translation
         Morning,
         Midday,
         Evening,
+        Survivor,
+        Citizen,
+        Criminal,
 
         Identification,
         Password,
@@ -41,6 +44,7 @@ public static class Translation
         Duplicated,
         AlreadyConnected,
 
+        Remaining,
         DoYouWantTo,
         TryConnection,
         LoseConnection,
