@@ -27,14 +27,13 @@ public class StageController : MonoBehaviour
 
     [SerializeField]
     private Person[] _personPrefabs = new Person[Person.FormCount];
-
     private List<Person> _personList = new List<Person>();
-
     private Action<IEnumerable<Person>> _personAction = null;
 
     private static readonly int PersonWidthAlignmentCount = 3;
     private static readonly string PersonPrefix = "Person";
     private static readonly Vector2 PersonSpaceInterval = new Vector2(2.5f, 3f);
+    private static readonly Vector3 PersonCenterPosition = new Vector3(0, 0, 3f);
 
 #if UNITY_EDITOR
     [Header("테스트 모드")]
@@ -132,7 +131,7 @@ public class StageController : MonoBehaviour
                 int row = i / PersonWidthAlignmentCount;
                 float x = ((i % PersonWidthAlignmentCount) - (((Mathf.Min(PersonWidthAlignmentCount, list.Count - row * PersonWidthAlignmentCount)) - 1) / 2f)) * PersonSpaceInterval.x; // X축 정렬 (가운데 기준)               
                 float y = (row - ((totalRows - 1) / 2f)) * PersonSpaceInterval.y; // Y축 정렬 (가운데 기준)
-                GameObject gameObject = PhotonNetwork.InstantiateRoomObject(_personPrefabs[list[i].Item1].name, new Vector3(x, 0, y), Quaternion.identity);
+                GameObject gameObject = PhotonNetwork.InstantiateRoomObject(_personPrefabs[list[i].Item1].name, PersonCenterPosition + new Vector3(x, 0, y), Quaternion.identity);
                 gameObject.transform.parent = getTransform;
                 gameObject.GetComponent<Person>().Initialize(PersonPrefix + (i + 1).ToString(), list[i].Item2, list[i].Item3);
             }
@@ -155,6 +154,10 @@ public class StageController : MonoBehaviour
                     {
                         case GameManager.TurnKey:
                             byte.TryParse(hashtable[key].ToString(), out turn);
+                            if(PhotonNetwork.IsMasterClient == false && (GameManager.Cycle)(turn % (int)GameManager.Cycle.End) == GameManager.Cycle.Morning)
+                            {
+                                return;
+                            }
                             break;
                         case GameManager.TimeKey:
                             continue;
@@ -191,44 +194,20 @@ public class StageController : MonoBehaviour
             }
             List<IGrouping<string, string>> grouped = list.GroupBy(x => x).OrderByDescending(value => value.Count()).ToList();
             grouped = grouped.Where(value => value.Count() == grouped.First().Count()).ToList();
-            hashtable = new Hashtable();
             foreach (Person person in _personList)
             {
-                if (person != null)
+                if (person != null && person.alive == true)
                 {
                     string name = person.name;
-                    if (name == PhotonNetwork.LocalPlayer.NickName)
+                    if (name == PhotonNetwork.LocalPlayer.NickName) //또는 
                     {
-                        if (person.alive == true)
-                        {
-                            switch (cycle)
-                            {
-                                case GameManager.Cycle.Evening:
-                                    if(grouped.Count == 1)
-                                    {
 
-                                    }
-                                    break;
-                                case GameManager.Cycle.Morning:
-                                    break;
-                                case GameManager.Cycle.Midday:
-                                    break;
-                            }
-                        }
-                        if(dictionary.ContainsKey(name) == true && dictionary[name] != null)
-                        {
-                            hashtable.Add(name, null);
-                        }
                     }
                 }
             }
             if(PhotonNetwork.IsMasterClient == true)
             {
 
-            }
-            if (hashtable.Count > 0)
-            {
-                room.SetCustomProperties(hashtable);
             }
         }
     }

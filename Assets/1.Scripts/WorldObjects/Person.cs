@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Photon.Pun;
-using Photon.Realtime;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Animator))]
@@ -60,9 +59,8 @@ public class Person : MonoBehaviourPunCallbacks
         private set;
     }
 
-    public static event Action<Person> createAction = null;
-
     private static readonly string FallingTag = "Falling";
+    public static event Action<Person> createAction = null;
 
     public const bool Citizen = false;
     public const bool Criminal = true;
@@ -70,10 +68,7 @@ public class Person : MonoBehaviourPunCallbacks
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        if (PhotonNetwork.InRoom == true)
-        {
-            Initialize(name, owner, _identification);
-        }
+        Initialize(name, owner, _identification);
     }
 #endif
 
@@ -83,11 +78,6 @@ public class Person : MonoBehaviourPunCallbacks
         this.name = name;
         this.owner = owner;
         _identification = identification;
-        Player player = PhotonNetwork.LocalPlayer;
-        if(this.owner == player.NickName)
-        {
-            photonView.TransferOwnership(player);
-        }
         createAction?.Invoke(this);
     }
 
@@ -106,16 +96,16 @@ public class Person : MonoBehaviourPunCallbacks
     public void Initialize(string name, string owner, bool identification)
     {
         Set(name, owner, identification);
-        if (photonView.IsMine == true)
+        if (PhotonNetwork.InRoom == true)
         {
             photonView.RPC("Set", RpcTarget.OthersBuffered, name, owner, identification);
         }
     }
 
-    public void Kill()
+    public void Die()
     {
         SetTrigger(FallingTag);
-        if (photonView.IsMine == true)
+        if (PhotonNetwork.InRoom == true)
         {
             photonView.RPC("SetTrigger", RpcTarget.Others, FallingTag);
             StartCoroutine(DoAnimationUntilDone());
@@ -131,7 +121,7 @@ public class Person : MonoBehaviourPunCallbacks
 
     public override void OnEnable()
     {
-        if (photonView.IsMine == true)
+        if (PhotonNetwork.InRoom == true)
         {
             AnimatorStateInfo animatorStateInfo = getAnimator.GetCurrentAnimatorStateInfo(0);
             if(animatorStateInfo.shortNameHash == Animator.StringToHash(FallingTag) && animatorStateInfo.normalizedTime < 1f)

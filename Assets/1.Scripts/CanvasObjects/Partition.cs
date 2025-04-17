@@ -56,8 +56,7 @@ public class Partition : MonoBehaviour
 
 #if UNITY_EDITOR
 
-        [SerializeField]
-        private Color gizmoColor;
+        public Color gizmoColor;
 
         private static readonly int SquarangularEdgeCount = 4;
 
@@ -99,6 +98,7 @@ public class Partition : MonoBehaviour
 
     private static readonly Vector2 StandardDivision = new Vector2(1, 1);
     private static readonly Vector2 StandardPivot = new Vector2(0.5f, 0.5f);
+    private static readonly Color StandardColor = new Color();
 
     private void OnValidate()
     {
@@ -111,6 +111,7 @@ public class Partition : MonoBehaviour
                     _frames[j].rectTransform = null;
                     _frames[j].division = StandardDivision;
                     _frames[j].pivot = StandardPivot;
+                    _frames[j].gizmoColor = StandardColor;
                 }
             }
         }

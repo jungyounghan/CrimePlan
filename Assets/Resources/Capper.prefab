@@ -1057,7 +1057,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ObservedComponentsFoldoutOpen: 1
   Group: 0
-  prefixField: -1
+  prefixField: 0
   Synchronization: 3
   OwnershipTransfer: 1
   observableSearch: 2
@@ -1273,6 +1273,10 @@ PrefabInstance:
     - target: {fileID: 4905322145121264078, guid: 5483a8e41e8a3414b8a9ecc56be0c59e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7881853638809675563, guid: 5483a8e41e8a3414b8a9ecc56be0c59e, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

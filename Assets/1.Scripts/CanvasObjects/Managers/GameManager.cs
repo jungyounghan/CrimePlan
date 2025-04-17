@@ -3,7 +3,6 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
-using System.Linq;
 
 [RequireComponent(typeof(StateController))]
 public class GameManager : Manager
@@ -112,14 +111,13 @@ public class GameManager : Manager
                         }
                         break;
                     case TurnKey:
-                        if (hashtable[key] != null && byte.TryParse(hashtable[key].ToString(), out byte turn) == true)
+                        byte turn = 0;
+                        if (hashtable[key] != null)
                         {
-                            getStateController.OnRoomPropertiesUpdate(turn);
+                            byte.TryParse(hashtable[key].ToString(), out turn);
                         }
-                        else
-                        {
-                            getStateController.OnRoomPropertiesUpdate(0);
-                        }
+                        getStateController.OnRoomPropertiesUpdate(turn);
+                        //게임 승패 나오면
                         break;
                 }
             }
