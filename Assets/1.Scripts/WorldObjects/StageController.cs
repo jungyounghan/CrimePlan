@@ -16,7 +16,7 @@ public class StageController : MonoBehaviour
     private Transform getTransform {
         get
         {
-            if(_hasTransform == false)
+            if (_hasTransform == false)
             {
                 _hasTransform = true;
                 _transform = transform;
@@ -24,6 +24,11 @@ public class StageController : MonoBehaviour
             return _transform;
         }
     }
+
+    [SerializeField]
+    private bool _pressable = false;
+    [SerializeField]
+    private GameObject _spotLightObject;
 
     [SerializeField]
     private Person[] _personPrefabs = new Person[Person.FormCount];
@@ -44,6 +49,7 @@ public class StageController : MonoBehaviour
 
     private void OnValidate()
     {
+        _spotLightObject.Set(false);
         int length = _personPrefabs.Length;
         int end = Person.FormCount;
         if (length > end)
@@ -140,74 +146,81 @@ public class StageController : MonoBehaviour
 
     public void UpdateTurn()
     {
-        Room room = PhotonNetwork.CurrentRoom;
-        Hashtable hashtable = room != null ? room.CustomProperties : null;
-        if (hashtable != null)
+        _pressable = false;
+        if(PhotonNetwork.IsMasterClient == true)
         {
-            byte turn = 0;
-            Dictionary<string, string> dictionary = new Dictionary<string, string>();
-            foreach (string key in hashtable.Keys)
+            Room room = PhotonNetwork.CurrentRoom;
+            Hashtable hashtable = room != null ? room.CustomProperties : null;
+            if (hashtable != null)
             {
-                if (hashtable[key] != null)
+                byte turn = 0;
+                Dictionary<string, string> dictionary = new Dictionary<string, string>();
+                foreach (string key in hashtable.Keys)
                 {
-                    switch (key)
+                    if (hashtable[key] != null)
                     {
-                        case GameManager.TurnKey:
-                            byte.TryParse(hashtable[key].ToString(), out turn);
-                            if(PhotonNetwork.IsMasterClient == false && (GameManager.Cycle)(turn % (int)GameManager.Cycle.End) == GameManager.Cycle.Morning)
-                            {
-                                return;
-                            }
-                            break;
-                        case GameManager.TimeKey:
-                            continue;
-                        default:
-                            dictionary[key] = hashtable[key].ToString();
-                            break;
-                    }
-                }
-            }
-            GameManager.Cycle cycle = (GameManager.Cycle)(turn % (int)GameManager.Cycle.End);
-            List<string> list = new List<string>();
-            foreach (Person person in _personList)
-            {
-                if (person != null && person.alive == true)
-                {
-                    string name = person.name;
-                    if (dictionary.ContainsKey(name) == true)
-                    {
-                        switch (cycle)
+                        switch (key)
                         {
-                            case GameManager.Cycle.Evening:
-                                if (person.identification == Person.Criminal)
-                                {
-                                    list.Add(dictionary[name]);
-                                }
+                            case GameManager.TurnKey:
+                                byte.TryParse(hashtable[key].ToString(), out turn);
                                 break;
-                            case GameManager.Cycle.Morning:
-                            case GameManager.Cycle.Midday:
-                                list.Add(dictionary[name]);
+                            case GameManager.TimeKey:
+                                continue;
+                            default:
+                                dictionary[key] = hashtable[key].ToString();
                                 break;
                         }
                     }
                 }
-            }
-            List<IGrouping<string, string>> grouped = list.GroupBy(x => x).OrderByDescending(value => value.Count()).ToList();
-            grouped = grouped.Where(value => value.Count() == grouped.First().Count()).ToList();
-            foreach (Person person in _personList)
-            {
-                if (person != null && person.alive == true)
+                GameManager.Cycle cycle = (GameManager.Cycle)(turn % (int)GameManager.Cycle.End);
+                List<string> list = new List<string>();
+                foreach (Person person in _personList)
                 {
-                    string name = person.name;
-                    if (name == PhotonNetwork.LocalPlayer.NickName) //또는 
+                    if (person != null && person.alive == true)
                     {
+                        string name = person.name;
+                        if (dictionary.ContainsKey(name) == true)
+                        {
+                            switch (cycle)
+                            {
+                                case GameManager.Cycle.Evening:
+                                    if (person.identification == Person.Criminal)
+                                    {
+                                        list.Add(dictionary[name]);
+                                    }
+                                    break;
+                                case GameManager.Cycle.Morning:
+                                case GameManager.Cycle.Midday:
+                                    list.Add(dictionary[name]);
+                                    break;
+                            }
+                        }
+                    }
+                }
+                List<IGrouping<string, string>> grouped = list.GroupBy(x => x).OrderByDescending(value => value.Count()).ToList();
+                grouped = grouped.Where(value => value.Count() == grouped.First().Count()).ToList();
+                foreach (Person person in _personList)
+                {
+                    if (person != null)
+                    {
+                        if (person.alive == true)
+                        {
+                            string name = person.name;
+                            if (name == PhotonNetwork.LocalPlayer.NickName) //또는 
+                            {
 
+                            }
+                        }
+                        person.HideInfo();
                     }
                 }
             }
-            if(PhotonNetwork.IsMasterClient == true)
+        }
+        else
+        {
+            foreach (Person person in _personList)
             {
-
+                person?.HideInfo();
             }
         }
     }

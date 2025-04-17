@@ -36,6 +36,9 @@ public class Person : MonoBehaviourPunCallbacks
     }
 
     [SerializeField]
+    private Transform _canvasTransform;
+
+    [SerializeField]
     private bool _identification = false;
 
     public bool identification {
@@ -68,9 +71,22 @@ public class Person : MonoBehaviourPunCallbacks
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        Initialize(name, owner, _identification);
+        if (photonView.ViewID > 0)
+        {
+            Initialize(name, owner, _identification);
+        }
     }
 #endif
+
+    private void Update()
+    {
+        if(_canvasTransform != null)
+        {
+            //_canvasTransform.transform.position = Camera.main.transform.position + Camera.main.transform.forward * distance;
+            // 카메라와 같은 회전
+            _canvasTransform.transform.rotation = Camera.main.transform.rotation;
+        }
+    }
 
     [PunRPC]
     private void Set(string name, string owner, bool identification)
@@ -100,6 +116,11 @@ public class Person : MonoBehaviourPunCallbacks
         {
             photonView.RPC("Set", RpcTarget.OthersBuffered, name, owner, identification);
         }
+    }
+
+    public void HideInfo()
+    {
+
     }
 
     public void Die()
