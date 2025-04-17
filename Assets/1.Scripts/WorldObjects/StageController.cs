@@ -33,7 +33,7 @@ public class StageController : MonoBehaviour
     private Action<IEnumerable<Person>> _personAction = null;
 
     private static readonly int PersonWidthAlignmentCount = 3;
-    private static readonly string PersonBotTag = "PersonBot";
+    private static readonly string PersonPrefix = "Person";
     private static readonly Vector2 PersonSpaceInterval = new Vector2(2.5f, 3f);
 
 #if UNITY_EDITOR
@@ -88,10 +88,10 @@ public class StageController : MonoBehaviour
         Person.createAction += Create;
         if(PhotonNetwork.IsMasterClient == true && _personPrefabs.Length == Person.FormCount && _personPrefabs[((int)Person.Form.Capper)] != null && _personPrefabs[((int)Person.Form.Lady)] != null && _personPrefabs[((int)Person.Form.Strider)] != null)
         {
-            Dictionary<int, Player> players = PhotonNetwork.CurrentRoom.Players;
-            List<(byte, string, bool)> list = new List<(byte, string, bool)>();
             int citizenCount = 0;
             int criminalCount = 0;
+            Dictionary<int, Player> players = PhotonNetwork.CurrentRoom.Players;
+            List<(byte, string, bool)> list = new List<(byte, string, bool)>();
             foreach (Player player in players.Values)
             {
                 Hashtable hashtable = player.CustomProperties;
@@ -101,7 +101,7 @@ public class StageController : MonoBehaviour
                     form = (byte)Person.Form.Strider;
                 }
                 bool identity = hashtable != null && hashtable.ContainsKey(RoomManager.IdentityKey) && hashtable[RoomManager.IdentityKey] != null && bool.TryParse(hashtable[RoomManager.IdentityKey].ToString(), out identity) ? identity : Person.Citizen;
-                switch(identity)
+                switch (identity)
                 {
                     case Person.Citizen:
                         citizenCount++;
@@ -112,30 +112,29 @@ public class StageController : MonoBehaviour
                 }
                 list.Add((form, player.NickName, identity));
             }
-            int botIndex = 0;
-            if(criminalCount == 0)
+            if (criminalCount == 0)
             {
-                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), PersonBotTag + botIndex++, Person.Criminal));
+                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), null, Person.Criminal));
                 criminalCount++;
             }
-            for (int i = citizenCount; i < criminalCount * 2 + 1; i++) //시민 부족 → 시민 보충
+            for (; citizenCount < criminalCount * 2 + 1; citizenCount++) //시민 부족 → 시민 보충
             {
-                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), PersonBotTag + botIndex++, Person.Citizen));
+                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), null, Person.Citizen));
             }
-            for (int i = criminalCount; i < (citizenCount - 1) / 2; i++) //범인 부족 → 범인 보충
+            for (; criminalCount < (citizenCount - 1) / 2; criminalCount++) //범인 부족 → 범인 보충
             {
-                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), PersonBotTag + botIndex++, Person.Criminal));
+                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), null, Person.Criminal));
             }
             list = list.OrderBy(value => UnityEngine.Random.value).ToList();//AI와 유저를 특정하지 못하도록 순서 섞어주기
             int totalRows = Mathf.CeilToInt(list.Count / (float)PersonWidthAlignmentCount);
             for (int i = 0; i < list.Count; i++)
             {
-                int row = i / PersonWidthAlignmentCount;                
+                int row = i / PersonWidthAlignmentCount;
                 float x = ((i % PersonWidthAlignmentCount) - (((Mathf.Min(PersonWidthAlignmentCount, list.Count - row * PersonWidthAlignmentCount)) - 1) / 2f)) * PersonSpaceInterval.x; // X축 정렬 (가운데 기준)               
                 float y = (row - ((totalRows - 1) / 2f)) * PersonSpaceInterval.y; // Y축 정렬 (가운데 기준)
                 GameObject gameObject = PhotonNetwork.InstantiateRoomObject(_personPrefabs[list[i].Item1].name, new Vector3(x, 0, y), Quaternion.identity);
                 gameObject.transform.parent = getTransform;
-                gameObject.GetComponent<Person>().Initialize(list[i].Item2, list[i].Item3);
+                gameObject.GetComponent<Person>().Initialize(PersonPrefix + (i + 1).ToString(), list[i].Item2, list[i].Item3);
             }
         }
     }
@@ -147,7 +146,7 @@ public class StageController : MonoBehaviour
         if (hashtable != null)
         {
             byte turn = 0;
-            Dictionary<string, string> members = new Dictionary<string, string>();
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
             foreach (string key in hashtable.Keys)
             {
                 if (hashtable[key] != null)
@@ -158,48 +157,95 @@ public class StageController : MonoBehaviour
                             byte.TryParse(hashtable[key].ToString(), out turn);
                             break;
                         case GameManager.TimeKey:
-                            break;
+                            continue;
                         default:
-                            members.Add(key, hashtable[key].ToString());
+                            dictionary[key] = hashtable[key].ToString();
                             break;
                     }
                 }
             }
-            //Dictionary<string, int> votes
+            GameManager.Cycle cycle = (GameManager.Cycle)(turn % (int)GameManager.Cycle.End);
+            List<string> list = new List<string>();
             foreach (Person person in _personList)
             {
-                if (person != null && person.alive == true && members.ContainsKey(person.name) == true) //해당 플레이어가 살아있으면 영향력을 행사할 수 있는 투표권임
+                if (person != null && person.alive == true)
                 {
-
+                    string name = person.name;
+                    if (dictionary.ContainsKey(name) == true)
+                    {
+                        switch (cycle)
+                        {
+                            case GameManager.Cycle.Evening:
+                                if (person.identification == Person.Criminal)
+                                {
+                                    list.Add(dictionary[name]);
+                                }
+                                break;
+                            case GameManager.Cycle.Morning:
+                            case GameManager.Cycle.Midday:
+                                list.Add(dictionary[name]);
+                                break;
+                        }
+                    }
                 }
             }
-
-
-            switch ((GameManager.Cycle)(turn % (int)GameManager.Cycle.End))       //자기가 조종하는 플레이어를 자기 스스로 죽인다.(조종자가 없다면 마스터가 죽인다)
+            List<IGrouping<string, string>> grouped = list.GroupBy(x => x).OrderByDescending(value => value.Count()).ToList();
+            grouped = grouped.Where(value => value.Count() == grouped.First().Count()).ToList();
+            hashtable = new Hashtable();
+            foreach (Person person in _personList)
             {
-                case GameManager.Cycle.Morning:
-                    break;
-                case GameManager.Cycle.Midday:
-                    break;
-                case GameManager.Cycle.Evening:
-                    break;
+                if (person != null)
+                {
+                    string name = person.name;
+                    if (name == PhotonNetwork.LocalPlayer.NickName)
+                    {
+                        if (person.alive == true)
+                        {
+                            switch (cycle)
+                            {
+                                case GameManager.Cycle.Evening:
+                                    if(grouped.Count == 1)
+                                    {
+
+                                    }
+                                    break;
+                                case GameManager.Cycle.Morning:
+                                    break;
+                                case GameManager.Cycle.Midday:
+                                    break;
+                            }
+                        }
+                        if(dictionary.ContainsKey(name) == true && dictionary[name] != null)
+                        {
+                            hashtable.Add(name, null);
+                        }
+                    }
+                }
             }
-            if (PhotonNetwork.IsMasterClient == true)
+            if(PhotonNetwork.IsMasterClient == true)
             {
-                //PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, turn + 1 } });
+
+            }
+            if (hashtable.Count > 0)
+            {
+                room.SetCustomProperties(hashtable);
             }
         }
     }
 
-    public void UpdateInput(Camera camera)
+    public Person GetUpdatePerson(Camera camera)
     {
         if (camera != null && Physics.Raycast(camera.ScreenPointToRay(Input.mousePosition), out RaycastHit hit) == true)
         {
-            //var comp = hit.collider.GetComponent<MyComponent>();
-            //if (comp != null)
-            //{
-            //    comp.OnClicked();
-            //}
+            Debug.Log(hit.collider.gameObject);
+            foreach(Person person in _personList)
+            {
+                if(person != null && person.gameObject == hit.collider.gameObject)
+                {
+                    return person;
+                }
+            }
         }
+        return null;
     }
 }

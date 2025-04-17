@@ -18,11 +18,9 @@ public class StateController : MonoBehaviour
     private byte _survivor = 0;
     private byte _criminal = 0;
 
-
-
     private void SetTurnText()
     {
-        Translation.Letter segment = (Translation.Letter)((_turn % (int)GameManager.Cycle.End) + (int)Translation.Letter.Morning);
+        Translation.Letter segment = (Translation.Letter)((_turn % (int)GameManager.Cycle.End) + (int)Translation.Letter.Evening);
         _turnText.Set(string.Format(Translation.Get(Translation.Letter.Day), (_turn / (int)GameManager.Cycle.End).ToString("D2")) + " " + Translation.Get(segment));
     }
 
@@ -45,7 +43,7 @@ public class StateController : MonoBehaviour
         SetRemainingText();
     }
 
-    public void SetMember(IEnumerable<Person> persons)
+    public void ShowRemains(IEnumerable<Person> persons)
     {
         _survivor = 0;
         _criminal = 0;
@@ -66,9 +64,26 @@ public class StateController : MonoBehaviour
         SetRemainingText();
     }
 
+    public void UpdateSelect(Person person)
+    {
+        if(person != null)
+        {
+
+        }
+        else
+        {
+            //¼û±â±â
+        }
+    }
+
     public void OnRoomPropertiesUpdate(byte turn)
     {
         _turn = turn;
         SetTurnText();
+    }
+
+    public void OnRoomPropertiesUpdate(object data)
+    {
+
     }
 }

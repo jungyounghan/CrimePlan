@@ -59,14 +59,14 @@ public static class Korean
                 case Translation.Letter.Day:
                     letters[i] = "{0}일";
                     break;
+                case Translation.Letter.Evening:
+                    letters[i] = "저녁";
+                    break;
                 case Translation.Letter.Morning:
                     letters[i] = "아침";
                     break;
                 case Translation.Letter.Midday:
                     letters[i] = "점심";
-                    break;
-                case Translation.Letter.Evening:
-                    letters[i] = "저녁";
                     break;
                 case Translation.Letter.Survivor:
                     letters[i] = "생존자";

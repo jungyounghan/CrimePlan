@@ -49,6 +49,8 @@ public class RoomManager : Manager
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
         _testText.Set(PhotonNetwork.CurrentRoom.PlayerCount.ToString());
+
+        //PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable() { { IdentityKey, Person.Criminal } });
     }
 
     public override void OnRoomPropertiesUpdate(Hashtable hashtable)

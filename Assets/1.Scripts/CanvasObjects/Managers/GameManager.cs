@@ -3,6 +3,7 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
+using System.Linq;
 
 [RequireComponent(typeof(StateController))]
 public class GameManager : Manager
@@ -28,9 +29,9 @@ public class GameManager : Manager
 
     public enum Cycle: byte
     {
+        Evening,
         Morning,
         Midday,
-        Evening,
         End
     }
 
@@ -52,9 +53,9 @@ public class GameManager : Manager
                 _waitingTime = 0;
                 _stageController?.UpdateTurn();
             }
-            else if (Input.GetMouseButtonDown(0))
+            else if (Input.GetMouseButtonDown(0) && _stageController != null)
             {
-                //_stageController?.UpdateInput(Camera.main); //누르고 명령 내리기(return 값이 있고 그것이 캔버스로 전송되게하자)
+                getStateController.UpdateSelect(_stageController.GetUpdatePerson(Camera.main));
             }
             getStateController.UpdateTime(currentTime);
         }
@@ -64,19 +65,14 @@ public class GameManager : Manager
     {
         base.Initialize();
         SetInteractable(true);
-        _stageController?.Initialize((value) => { getStateController.SetMember(value); });
-        if (PhotonNetwork.IsMasterClient == true)
+        _stageController?.Initialize((value) => { getStateController.ShowRemains(value); });
+        if(PhotonNetwork.IsMasterClient == true)
         {
-            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue } });
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, 0 } });
         }
         else
         {
             Room room = PhotonNetwork.CurrentRoom;
-            Dictionary<int, Player> players = PhotonNetwork.CurrentRoom.Players;
-            foreach (KeyValuePair<int, Player> keyValuePair in players)
-            {
-                Debug.Log(keyValuePair.Value.UserId);
-            }
             if (room != null)
             {
                 OnRoomPropertiesUpdate(room.CustomProperties);

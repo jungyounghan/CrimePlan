@@ -56,6 +56,9 @@ public static class English
                 case Translation.Letter.Language:
                     letters[i] = "Language";
                     break;
+                case Translation.Letter.Evening:
+                    letters[i] = "Evening";
+                    break;
                 case Translation.Letter.Morning:
                     letters[i] = "Morning";
                     break;
@@ -64,9 +67,6 @@ public static class English
                     break;
                 case Translation.Letter.Midday:
                     letters[i] = "Midday";
-                    break;
-                case Translation.Letter.Evening:
-                    letters[i] = "Evening";
                     break;
                 case Translation.Letter.Survivor:
                     letters[i] = "Survivor";

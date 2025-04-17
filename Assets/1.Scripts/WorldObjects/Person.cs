@@ -2,9 +2,11 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Photon.Pun;
+using Photon.Realtime;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Animator))]
+[RequireComponent(typeof(Collider))]
 [RequireComponent(typeof(PhotonView))]
 [RequireComponent(typeof(PhotonTransformView))]
 public class Person : MonoBehaviourPunCallbacks
@@ -48,8 +50,14 @@ public class Person : MonoBehaviourPunCallbacks
     {
         get
         {
-            return getAnimator.GetCurrentAnimatorStateInfo(0).shortNameHash == Animator.StringToHash(FallingTag);
+            return getAnimator.GetCurrentAnimatorStateInfo(0).shortNameHash != Animator.StringToHash(FallingTag);
         }
+    }
+
+    public string owner
+    {
+        get;
+        private set;
     }
 
     public static event Action<Person> createAction = null;
@@ -62,15 +70,24 @@ public class Person : MonoBehaviourPunCallbacks
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        Set(name, _identification);
+        if (PhotonNetwork.InRoom == true)
+        {
+            Initialize(name, owner, _identification);
+        }
     }
 #endif
 
     [PunRPC]
-    private void Set(string name, bool identification)
+    private void Set(string name, string owner, bool identification)
     {
         this.name = name;
+        this.owner = owner;
         _identification = identification;
+        Player player = PhotonNetwork.LocalPlayer;
+        if(this.owner == player.NickName)
+        {
+            photonView.TransferOwnership(player);
+        }
         createAction?.Invoke(this);
     }
 
@@ -86,19 +103,19 @@ public class Person : MonoBehaviourPunCallbacks
         getAnimator.Play(tag, 0, 1f); //해당 포즈로 즉시 재생
     }
 
-    public void Initialize(string name, bool identification)
+    public void Initialize(string name, string owner, bool identification)
     {
-        Set(name, identification);
-        if (PhotonNetwork.IsMasterClient == true)
+        Set(name, owner, identification);
+        if (photonView.IsMine == true)
         {
-            photonView.RPC("Set", RpcTarget.OthersBuffered, name, identification);
+            photonView.RPC("Set", RpcTarget.OthersBuffered, name, owner, identification);
         }
     }
 
     public void Kill()
     {
         SetTrigger(FallingTag);
-        if (PhotonNetwork.IsMasterClient == true)
+        if (photonView.IsMine == true)
         {
             photonView.RPC("SetTrigger", RpcTarget.Others, FallingTag);
             StartCoroutine(DoAnimationUntilDone());
@@ -114,7 +131,7 @@ public class Person : MonoBehaviourPunCallbacks
 
     public override void OnEnable()
     {
-        if (PhotonNetwork.IsMasterClient == true)
+        if (photonView.IsMine == true)
         {
             AnimatorStateInfo animatorStateInfo = getAnimator.GetCurrentAnimatorStateInfo(0);
             if(animatorStateInfo.shortNameHash == Animator.StringToHash(FallingTag) && animatorStateInfo.normalizedTime < 1f)
