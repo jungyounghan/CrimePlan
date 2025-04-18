@@ -12,8 +12,6 @@ using Photon.Pun;
 [RequireComponent(typeof(AudioSource))]
 public abstract class Manager : MonoBehaviourPunCallbacks
 {
-    private static Manager _instance = null;
-
     [Header("오디오 믹서"), SerializeField]
     private AudioMixer _audioMixer;
 
@@ -85,6 +83,8 @@ public abstract class Manager : MonoBehaviourPunCallbacks
     protected static readonly string LanguageTag = "Language";
 
 #if UNITY_EDITOR
+    private static Manager _instance = null;
+
     [Header("언어 변경"), SerializeField]
     private Translation.Language _language = Translation.Language.Korean;
 

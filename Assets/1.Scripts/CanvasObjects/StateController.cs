@@ -18,10 +18,17 @@ public class StateController : MonoBehaviour
     private byte _survivor = 0;
     private byte _criminal = 0;
 
+    private static readonly int MaxDay = byte.MaxValue / (int)GameManager.Cycle.End;
+
     private void SetTurnText()
     {
         Translation.Letter segment = (Translation.Letter)((_turn % (int)GameManager.Cycle.End) + (int)Translation.Letter.Evening);
-        _turnText.Set(string.Format(Translation.Get(Translation.Letter.Day), (_turn / (int)GameManager.Cycle.End).ToString("D2")) + " " + Translation.Get(segment));
+        int day = (_turn + 2) / (int)GameManager.Cycle.End;
+        if (day >= MaxDay)
+        {
+            day = 0;
+        }
+        _turnText.Set(string.Format(Translation.Get(Translation.Letter.Day), day.ToString("D2")) + " " + Translation.Get(segment));
     }
 
     private void SetRemainingText()

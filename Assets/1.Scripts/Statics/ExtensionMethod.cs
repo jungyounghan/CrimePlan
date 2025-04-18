@@ -7,12 +7,28 @@ using Cinemachine;
 
 public static class ExtensionMethod
 {
-
     public static void Set(this GameObject gameObject, bool value)
     {
         if(gameObject != null)
         {
             gameObject.SetActive(value);
+        }
+    }
+
+    public static void SetActive(this Light light, bool value)
+    {
+        if(light != null)
+        {
+            light.gameObject.SetActive(value);
+        }
+    }
+
+    public static void Set(this Light light, Color color, float intensity)
+    {
+        if (light != null)
+        {
+            light.color = color;
+            light.intensity = intensity;
         }
     }
 
@@ -99,6 +115,15 @@ public static class ExtensionMethod
         if(button != null)
         {
             button.interactable = value;
+        }
+    }
+
+    public static void SetListener(this Button button, UnityAction action)
+    {
+        if (button != null)
+        {
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(action);
         }
     }
 

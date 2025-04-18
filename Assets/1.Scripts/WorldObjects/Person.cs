@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using Photon.Pun;
 using TMPro;
 
@@ -103,13 +104,27 @@ public class Person : MonoBehaviourPunCallbacks
     }
 #endif
 
+    private void Start()
+    {
+        _spotLight.SetActive(false);
+        _selectButton.SetActive(false);
+        SetInteractable(false);
+    }
+
     [PunRPC]
     private void Set(string name, string owner, bool identification)
     {
         this.name = name;
-        _playerText.Set(this.name);
         this.owner = owner;
         _identification = identification;
+        if(PhotonNetwork.NickName == owner)
+        {
+            _playerText.Set(this.name + "(" + Translation.Get(Translation.Letter.Mine) + ")");
+        }
+        else
+        {
+            _playerText.Set(this.name);
+        }
         createAction?.Invoke(this);
     }
 
@@ -136,12 +151,30 @@ public class Person : MonoBehaviourPunCallbacks
 
     public void ChangeText()
     {
+        if (PhotonNetwork.NickName == owner)
+        {
+            _playerText.Set(name + "(" + Translation.Get(Translation.Letter.Mine) + ")");
+        }
+        else
+        {
+            _playerText.Set(name);
+        }
         _selectButton.SetText(Translation.Get(Translation.Letter.Select));
+    }
+
+    public void SetListener(UnityAction unityAction)
+    {
+        _selectButton.SetListener(unityAction);
     }
 
     public void SetInteractable(bool value)
     {
         _selectButton.SetInteractable(value);
+    }
+
+    public void SetButton(bool value)
+    {
+        _selectButton.SetActive(value);
     }
 
     public void Die()

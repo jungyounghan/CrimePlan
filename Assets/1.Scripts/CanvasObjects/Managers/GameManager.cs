@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
@@ -38,6 +37,7 @@ public class GameManager : Manager
 
     public const string TurnKey = "Turn";
     public const string TimeKey = "Time";
+    public const string EndKey = "End";
 
     public static readonly float TimeLimitValue = 10;
     public static readonly string SceneName = "GameScene";
@@ -54,7 +54,8 @@ public class GameManager : Manager
             }
             else if (Input.GetMouseButtonDown(0) && _stageController != null)
             {
-                getStateController.UpdateSelect(_stageController.GetPerson());
+                //데이터 전송
+                _stageController.GetPerson();
             }
             getStateController.UpdateTime(currentTime);
         }
@@ -67,7 +68,7 @@ public class GameManager : Manager
         _stageController?.Initialize((value) => { getStateController.ShowRemains(value); });
         if(PhotonNetwork.IsMasterClient == true)
         {
-            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, 0 } });
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, 0} });
         }
         else
         {
@@ -96,7 +97,6 @@ public class GameManager : Manager
     {
         if (hashtable != null)
         {
-            Dictionary<string, object> dictionary = new Dictionary<string, object>();
             foreach (string key in hashtable.Keys)
             {
                 switch(key)
@@ -118,7 +118,7 @@ public class GameManager : Manager
                             byte.TryParse(hashtable[key].ToString(), out turn);
                         }
                         getStateController.OnRoomPropertiesUpdate(turn);
-                        //게임 승패 나오면
+                        _stageController?.OnRoomPropertiesUpdate(turn);
                         break;
                 }
             }

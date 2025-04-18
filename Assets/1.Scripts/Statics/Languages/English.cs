@@ -65,11 +65,11 @@ public static class English
                 case Translation.Letter.Morning:
                     letters[i] = "Morning";
                     break;
-                case Translation.Letter.Day:
-                    letters[i] = "Day {0}";
-                    break;
                 case Translation.Letter.Midday:
                     letters[i] = "Midday";
+                    break;
+                case Translation.Letter.Mine:
+                    letters[i] = "Mine";
                     break;
                 case Translation.Letter.Survivor:
                     letters[i] = "Survivor";
@@ -104,6 +104,9 @@ public static class English
                     letters[i] = "This Account is Currently Logged in";
                     break;
 
+                case Translation.Letter.Day:
+                    letters[i] = "Day {0}";
+                    break;
                 case Translation.Letter.Remaining:
                     letters[i] = "Remaining {0}";
                     break;

@@ -27,30 +27,21 @@ public class StageController : MonoBehaviour
     }
 
     [SerializeField]
-    private bool _pressable = false;
-    [SerializeField]
-    private GameObject _spotLightObject;
-
+    private Light _solarLight;
     [SerializeField]
     private Person[] _personPrefabs = new Person[Person.FormCount];
     private List<Person> _personList = new List<Person>();
     private Action<IEnumerable<Person>> _personAction = null;
 
-    private static readonly int PersonWidthAlignmentCount = 3;
+    private static readonly int PersonAlignmentCount = 3;
     private static readonly string PersonPrefix = "Person";
     private static readonly Vector2 PersonSpaceInterval = new Vector2(-2.5f, 3f);
     private static readonly Vector3 PersonCenterPosition = new Vector3(0, 0, 3f);
+    private static readonly (Color, float)[] LightTypes = new (Color, float)[]{(new Color(0.5f, 0.55f, 0.7f), 0.6f), (new Color(0.8f, 0.9f, 1f), 1), (new Color(1f, 0.7f, 0.5f), 0.6f) };
 
 #if UNITY_EDITOR
-    [Header("테스트 모드")]
-    [SerializeField]
-    private Person.Form _personForm = Person.Form.Capper;
-    [SerializeField]
-    private bool _identity = Person.Citizen;
-
     private void OnValidate()
     {
-        _spotLightObject.Set(false);
         int length = _personPrefabs.Length;
         int end = Person.FormCount;
         if (length > end)
@@ -83,8 +74,42 @@ public class StageController : MonoBehaviour
         if (person != null)
         {
             person.transform.parent = getTransform;
+            person.SetListener(() => {
+                Room room = PhotonNetwork.CurrentRoom;
+                if(room != null)
+                {
+                    for(int i = 0; i < _personList.Count; i++)
+                    {
+                        if (_personList[i] != null && _personList[i].owner == PhotonNetwork.NickName)
+                        {
+                            string key = _personList[i].name;
+                            string value = person.name;
+                            Hashtable hashtable = room.CustomProperties;
+                            if(hashtable != null && hashtable.ContainsKey(key) == true && hashtable[key] != null && hashtable[key].ToString() == value)
+                            {
+                                room.SetCustomProperties(new Hashtable() { { key, null } });
+                            }
+                            else
+                            {
+                                room.SetCustomProperties(new Hashtable() { { key, value } });
+                            }
+                        }
+                    }
+                }
+            });
             _personList.Add(person);
             _personAction?.Invoke(_personList);
+        }
+    }
+
+    private void SetInteractable(bool value)
+    {
+        foreach (Person person in _personList)
+        {
+            if(person != null && person.alive == true)
+            {
+                person.SetInteractable(value);
+            }
         }
     }
 
@@ -132,11 +157,11 @@ public class StageController : MonoBehaviour
                 list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), null, Person.Criminal));
             }
             list = list.OrderBy(value => UnityEngine.Random.value).ToList();//AI와 유저를 특정하지 못하도록 순서 섞어주기
-            int totalRows = Mathf.CeilToInt(list.Count / (float)PersonWidthAlignmentCount);
+            int totalRows = Mathf.CeilToInt(list.Count / (float)PersonAlignmentCount);
             for (int i = 0; i < list.Count; i++)
             {
-                int row = i / PersonWidthAlignmentCount;
-                float x = ((i % PersonWidthAlignmentCount) - (((Mathf.Min(PersonWidthAlignmentCount, list.Count - row * PersonWidthAlignmentCount)) - 1) / 2f)) * PersonSpaceInterval.x; // X축 정렬 (가운데 기준)               
+                int row = i / PersonAlignmentCount;
+                float x = ((i % PersonAlignmentCount) - (((Mathf.Min(PersonAlignmentCount, list.Count - row * PersonAlignmentCount)) - 1) / 2f)) * PersonSpaceInterval.x; // X축 정렬 (가운데 기준)               
                 float y = (row - ((totalRows - 1) / 2f)) * PersonSpaceInterval.y; // Y축 정렬 (가운데 기준)
                 GameObject gameObject = PhotonNetwork.InstantiateRoomObject(_personPrefabs[list[i].Item1].name, PersonCenterPosition + new Vector3(x, 0, y), Quaternion.identity);
                 gameObject.transform.parent = getTransform;
@@ -155,13 +180,9 @@ public class StageController : MonoBehaviour
 
     public void UpdateTurn()
     {
-        _pressable = false;
         if (PhotonNetwork.IsMasterClient == false)
         {
-            foreach (Person person in _personList)
-            {
-                //person?.SetInteractable(false);
-            }
+            SetInteractable(false);
         }
         else
         {
@@ -189,71 +210,179 @@ public class StageController : MonoBehaviour
                     }
                 }
                 GameManager.Cycle cycle = (GameManager.Cycle)(turn % (int)GameManager.Cycle.End);
-                List<string> list = new List<string>();
+                int citizenCount = 0;
+                int criminalCount = 0;
+                List<string> list = new List<string>(); //지목할 대상들 목록
                 foreach (Person person in _personList)
                 {
-                    if (person != null && person.alive == true)
+                    if (person != null)
                     {
-                        string name = person.name;
-                        if (dictionary.ContainsKey(name) == true)
+                        person.SetInteractable(false);
+                        if (person.alive == true) //살아있어야 투표가 가능하다.
                         {
-                            switch (cycle)
+                            switch(person.identification)
                             {
-                                case GameManager.Cycle.Evening:
-                                    if (person.identification == Person.Criminal)
-                                    {
-                                        list.Add(dictionary[name]);
-                                    }
+                                case Person.Citizen:
+                                    citizenCount++;
                                     break;
-                                case GameManager.Cycle.Morning:
-                                case GameManager.Cycle.Midday:
-                                    list.Add(dictionary[name]);
+                                case Person.Criminal:
+                                    criminalCount++;
                                     break;
+                            }
+                            string key = person.name;
+                            if (dictionary.ContainsKey(key) == true) //이 플레이어가 지목하는 대상이 있다면
+                            {
+                                switch (cycle)
+                                {
+                                    case GameManager.Cycle.Evening:
+                                        if (person.identification == Person.Criminal)
+                                        {
+                                            list.Add(dictionary[key]);
+                                        }
+                                        break;
+                                    case GameManager.Cycle.Morning:
+                                    case GameManager.Cycle.Midday:
+                                        list.Add(dictionary[key]);
+                                        break;
+                                }
                             }
                         }
                     }
                 }
                 List<IGrouping<string, string>> grouped = list.GroupBy(x => x).OrderByDescending(value => value.Count()).ToList();
                 grouped = grouped.Where(value => value.Count() == grouped.First().Count()).ToList();
+                if (cycle == GameManager.Cycle.Morning && grouped.Count != 1)//만약 아침인데 지목할 대상이 한 명으로 모이지 않았다면 바로 저녁으로
+                {
+                    if (turn + 2 == byte.MaxValue)
+                    {
+                        hashtable = new Hashtable() { { GameManager.TurnKey, 0 } };
+                    }
+                    else
+                    {
+                        hashtable = new Hashtable() { { GameManager.TurnKey, turn + 2 } };
+                    }
+                }
+                else
+                {
+                    if (turn + 1 == byte.MaxValue)
+                    {
+                        hashtable = new Hashtable() { { GameManager.TurnKey, 0 } };
+                    }
+                    else
+                    {
+                        hashtable = new Hashtable() { { GameManager.TurnKey, turn + 1 } };
+                    }
+                }
                 foreach (Person person in _personList)
                 {
                     if (person != null)
                     {
-                        if (person.alive == true)
+                        string key = person.name;
+                        switch (cycle)
                         {
-
+                            case GameManager.Cycle.Midday:
+                            case GameManager.Cycle.Evening:
+                                if (grouped.Count == 1 && key == grouped.First().Key && person.alive == true)
+                                {
+                                    switch (person.identification)
+                                    {
+                                        case Person.Citizen:
+                                            citizenCount--;
+                                            break;
+                                        case Person.Criminal:
+                                            criminalCount--;
+                                            break;
+                                    }
+                                    person.Die();
+                                }
+                                if(dictionary.ContainsKey(key) == true)
+                                {
+                                    hashtable.Add(key, null);
+                                }
+                                break;
+                            case GameManager.Cycle.Morning:
+                                if (dictionary.ContainsKey(key) == true && (grouped.Count != 1 || dictionary[key] != grouped.First().Key))
+                                {
+                                    hashtable.Add(key, null);
+                                }
+                                break;
                         }
-                        //person.SetInteractable(false);
                     }
                 }
-                room.SetCustomProperties(new Hashtable() { { GameManager.TimeKey, PhotonNetwork.Time + GameManager.TimeLimitValue }, { GameManager.TurnKey, turn + 1 } });
+                if (criminalCount == 0)                     //시민 승리
+                {
+                    hashtable.Add(GameManager.EndKey, Person.Citizen);
+                }
+                else if (citizenCount <= criminalCount)     //범인 승리
+                {
+                    hashtable.Add(GameManager.EndKey, Person.Criminal);
+                }
+                else                                        //승패가 안 남
+                {
+                    hashtable.Add(GameManager.TimeKey, PhotonNetwork.Time + GameManager.TimeLimitValue);
+                }
+                room.SetCustomProperties(hashtable);
             }
+        }
+    }
+
+    public void OnRoomPropertiesUpdate(byte turn)
+    {
+        GameManager.Cycle cycle = (GameManager.Cycle)(turn % (int)GameManager.Cycle.End);
+        _solarLight.Set(LightTypes[(int)cycle].Item1, LightTypes[(int)cycle].Item2);
+        switch (cycle)
+        {
+            case GameManager.Cycle.Evening:
+                foreach(Person person in _personList)
+                {
+                    if(person != null && person.owner == PhotonNetwork.NickName && person.alive == true && person.identification == Person.Criminal)
+                    {
+                        SetInteractable(true);
+                        break;
+                    }
+                }
+                break;
+            case GameManager.Cycle.Morning:
+                foreach (Person person in _personList)
+                {
+                    if (person != null && person.owner == PhotonNetwork.NickName && person.alive == true)
+                    {
+                        SetInteractable(true);
+                        break;
+                    }
+                }
+                break;
         }
     }
 
     public Person GetPerson()
     {
-        Camera camera = Camera.main;
-        if (camera != null && Physics.Raycast(camera.ScreenPointToRay(Input.mousePosition), out RaycastHit hit) == true)
+        Person person = null;
+        if (Camera.main != null && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit) == true)
         {
-            foreach(Person person in _personList)
+            for(int i = 0; i < _personList.Count; i++)
             {
-                if (person != null && person.gameObject == hit.collider.gameObject)
+                if (_personList[i] != null)
                 {
-                    // UI 버튼 위를 클릭했다면 뒤의 콜라이더 클릭 무시
-                    if (EventSystem.current.IsPointerOverGameObject())
+                    if(_personList[i].gameObject == hit.collider.gameObject)
                     {
-                        // UI를 클릭했으므로 3D 오브젝트 처리 스킵
-                        Debug.Log("UI");
+                        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())  //ui 버튼 위를 클릭했다면 뒤의 콜라이더 클릭 무시
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            _personList[i].SetButton(true);
+                            person = _personList[i];
+                        }
                     }
                     else
                     {
-                        Debug.Log("캡슐");
+                        _personList[i].SetButton(false);
                     }
-                    return person;
                 }
             }
         }
-        return null;
+        return person;
     }
 }
