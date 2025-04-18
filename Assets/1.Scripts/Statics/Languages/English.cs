@@ -40,6 +40,9 @@ public static class English
                 case Translation.Letter.Failed:
                     letters[i] = "Failed";
                     break;
+                case Translation.Letter.Select:
+                    letters[i] = "Select";
+                    break;
 
                 case Translation.Letter.Volume:
                     letters[i] = "Volume";

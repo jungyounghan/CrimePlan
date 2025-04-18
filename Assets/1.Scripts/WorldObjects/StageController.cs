@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
@@ -37,7 +38,7 @@ public class StageController : MonoBehaviour
 
     private static readonly int PersonWidthAlignmentCount = 3;
     private static readonly string PersonPrefix = "Person";
-    private static readonly Vector2 PersonSpaceInterval = new Vector2(2.5f, 3f);
+    private static readonly Vector2 PersonSpaceInterval = new Vector2(-2.5f, 3f);
     private static readonly Vector3 PersonCenterPosition = new Vector3(0, 0, 3f);
 
 #if UNITY_EDITOR
@@ -144,10 +145,25 @@ public class StageController : MonoBehaviour
         }
     }
 
+    public void ChangeText()
+    {
+        foreach(Person person in _personList)
+        {
+            person?.ChangeText();
+        }
+    }
+
     public void UpdateTurn()
     {
         _pressable = false;
-        if(PhotonNetwork.IsMasterClient == true)
+        if (PhotonNetwork.IsMasterClient == false)
+        {
+            foreach (Person person in _personList)
+            {
+                //person?.SetInteractable(false);
+            }
+        }
+        else
         {
             Room room = PhotonNetwork.CurrentRoom;
             Hashtable hashtable = room != null ? room.CustomProperties : null;
@@ -205,35 +221,35 @@ public class StageController : MonoBehaviour
                     {
                         if (person.alive == true)
                         {
-                            string name = person.name;
-                            if (name == PhotonNetwork.LocalPlayer.NickName) //또는 
-                            {
 
-                            }
                         }
-                        person.HideInfo();
+                        //person.SetInteractable(false);
                     }
                 }
-            }
-        }
-        else
-        {
-            foreach (Person person in _personList)
-            {
-                person?.HideInfo();
+                room.SetCustomProperties(new Hashtable() { { GameManager.TimeKey, PhotonNetwork.Time + GameManager.TimeLimitValue }, { GameManager.TurnKey, turn + 1 } });
             }
         }
     }
 
-    public Person GetUpdatePerson(Camera camera)
+    public Person GetPerson()
     {
+        Camera camera = Camera.main;
         if (camera != null && Physics.Raycast(camera.ScreenPointToRay(Input.mousePosition), out RaycastHit hit) == true)
         {
-            Debug.Log(hit.collider.gameObject);
             foreach(Person person in _personList)
             {
-                if(person != null && person.gameObject == hit.collider.gameObject)
+                if (person != null && person.gameObject == hit.collider.gameObject)
                 {
+                    // UI 버튼 위를 클릭했다면 뒤의 콜라이더 클릭 무시
+                    if (EventSystem.current.IsPointerOverGameObject())
+                    {
+                        // UI를 클릭했으므로 3D 오브젝트 처리 스킵
+                        Debug.Log("UI");
+                    }
+                    else
+                    {
+                        Debug.Log("캡슐");
+                    }
                     return person;
                 }
             }

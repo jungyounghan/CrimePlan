@@ -54,7 +54,7 @@ public class GameManager : Manager
             }
             else if (Input.GetMouseButtonDown(0) && _stageController != null)
             {
-                getStateController.UpdateSelect(_stageController.GetUpdatePerson(Camera.main));
+                getStateController.UpdateSelect(_stageController.GetPerson());
             }
             getStateController.UpdateTime(currentTime);
         }
@@ -88,6 +88,7 @@ public class GameManager : Manager
     protected override void ChangeText(Translation.Language language)
     {
         base.ChangeText(language);
+        _stageController?.ChangeText();
         getStateController.ChangeText();
     }
 

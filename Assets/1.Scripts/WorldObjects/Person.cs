@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 using Photon.Pun;
+using TMPro;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Animator))]
@@ -10,14 +12,21 @@ using Photon.Pun;
 [RequireComponent(typeof(PhotonTransformView))]
 public class Person : MonoBehaviourPunCallbacks
 {
-    public enum Form: byte
-    {
-        Capper,
-        Lady,
-        Strider
-    }
+    private bool _hasTransform = false;
 
-    public static readonly int FormCount = (int)Form.Strider + 1;
+    private Transform _transform = null;
+
+    private Transform getTransform
+    {
+        get
+        {
+            if(_hasTransform == false)
+            {
+                _hasTransform = TryGetComponent(out _transform);
+            }
+            return _transform;
+        }
+    }
 
     private bool _hasAnimator = false;
 
@@ -36,7 +45,13 @@ public class Person : MonoBehaviourPunCallbacks
     }
 
     [SerializeField]
+    private Light _spotLight;
+    [SerializeField]
     private Transform _canvasTransform;
+    [SerializeField]
+    private TMP_Text _playerText;
+    [SerializeField]
+    private Button _selectButton;
 
     [SerializeField]
     private bool _identification = false;
@@ -63,6 +78,16 @@ public class Person : MonoBehaviourPunCallbacks
     }
 
     private static readonly string FallingTag = "Falling";
+
+    public enum Form : byte
+    {
+        Capper,
+        Lady,
+        Strider
+    }
+
+    public static readonly int FormCount = (int)Form.Strider + 1;
+
     public static event Action<Person> createAction = null;
 
     public const bool Citizen = false;
@@ -78,20 +103,11 @@ public class Person : MonoBehaviourPunCallbacks
     }
 #endif
 
-    private void Update()
-    {
-        if(_canvasTransform != null)
-        {
-            //_canvasTransform.transform.position = Camera.main.transform.position + Camera.main.transform.forward * distance;
-            // 카메라와 같은 회전
-            _canvasTransform.transform.rotation = Camera.main.transform.rotation;
-        }
-    }
-
     [PunRPC]
     private void Set(string name, string owner, bool identification)
     {
         this.name = name;
+        _playerText.Set(this.name);
         this.owner = owner;
         _identification = identification;
         createAction?.Invoke(this);
@@ -118,9 +134,14 @@ public class Person : MonoBehaviourPunCallbacks
         }
     }
 
-    public void HideInfo()
+    public void ChangeText()
     {
+        _selectButton.SetText(Translation.Get(Translation.Letter.Select));
+    }
 
+    public void SetInteractable(bool value)
+    {
+        _selectButton.SetInteractable(value);
     }
 
     public void Die()
@@ -142,6 +163,17 @@ public class Person : MonoBehaviourPunCallbacks
 
     public override void OnEnable()
     {
+        if (_canvasTransform != null)
+        {
+            Camera camera = Camera.main;
+            if (camera != null)
+            {
+                Transform transform = camera.transform;
+                Vector3 position = getTransform.position;
+                _canvasTransform.position = position + ((transform.position - position).normalized * Vector3.Distance(position, _canvasTransform.position));
+                _canvasTransform.rotation = transform.rotation;
+            }
+        }
         if (PhotonNetwork.InRoom == true)
         {
             AnimatorStateInfo animatorStateInfo = getAnimator.GetCurrentAnimatorStateInfo(0);

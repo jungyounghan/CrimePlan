@@ -21,6 +21,7 @@ public static class Translation
         No,
         Success,
         Failed,
+        Select,
 
         Volume,
         Master,

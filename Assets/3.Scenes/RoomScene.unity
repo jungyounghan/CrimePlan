@@ -301,7 +301,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -496.66666, y: -366.625}
+  m_SizeDelta: {x: -186.66667, y: -434.875}
   m_Pivot: {x: 0.2, y: 0.2}
 --- !u!1001 &100834440912756910
 PrefabInstance:
@@ -341,7 +341,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8216624220347064655, guid: fbb42af593db4e2438629a4bb7f58fb9, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -695.3333
+      value: -261.33334
       objectReference: {fileID: 0}
     - target: {fileID: 8216624220347064655, guid: fbb42af593db4e2438629a4bb7f58fb9, type: 3}
       propertyPath: m_SizeDelta.y
@@ -518,7 +518,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 76.15
+  m_fontSize: 90.35
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -774,7 +774,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 942664984128488255, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_SizeDelta.y
-      value: -335.2
+      value: -397.6
       objectReference: {fileID: 0}
     - target: {fileID: 2138080304985992918, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_Name
@@ -794,11 +794,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3196407016338818617, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -372.5
+      value: -140
       objectReference: {fileID: 0}
     - target: {fileID: 3196407016338818617, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_SizeDelta.y
-      value: -335.2
+      value: -397.6
       objectReference: {fileID: 0}
     - target: {fileID: 4043419619943543051, guid: 47ae2fbfd0b38f849a5701a65a065091, type: 3}
       propertyPath: m_Pivot.x
@@ -972,7 +972,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -171.92305, y: -335.2}
+  m_SizeDelta: {x: -64.61538, y: -397.6}
   m_Pivot: {x: 0.5, y: 0.95}
 --- !u!114 &4075808862446964644 stripped
 MonoBehaviour:
@@ -1315,7 +1315,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 47.6
+  m_fontSize: 49.6
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1

@@ -40,6 +40,9 @@ public static class Korean
                 case Translation.Letter.Failed:
                     letters[i] = "실패";
                     break;
+                case Translation.Letter.Select:
+                    letters[i] = "선택";
+                    break;
 
                 case Translation.Letter.Volume:
                     letters[i] = "음량";
