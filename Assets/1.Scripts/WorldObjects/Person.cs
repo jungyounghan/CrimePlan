@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
@@ -68,7 +69,7 @@ public class Person : MonoBehaviourPunCallbacks
     {
         get
         {
-            return getAnimator.GetCurrentAnimatorStateInfo(0).shortNameHash != Animator.StringToHash(FallingTag);
+            return getAnimator.GetCurrentAnimatorStateInfo(0).IsName(FallingTag) == false;
         }
     }
 
@@ -77,6 +78,8 @@ public class Person : MonoBehaviourPunCallbacks
         get;
         private set;
     }
+
+    private List<string> _voterList = new List<string>();
 
     private static readonly string FallingTag = "Falling";
 
@@ -108,7 +111,6 @@ public class Person : MonoBehaviourPunCallbacks
     {
         _spotLight.SetActive(false);
         _selectButton.SetActive(false);
-        SetInteractable(false);
     }
 
     [PunRPC]
@@ -167,11 +169,6 @@ public class Person : MonoBehaviourPunCallbacks
         _selectButton.SetListener(unityAction);
     }
 
-    public void SetInteractable(bool value)
-    {
-        _selectButton.SetInteractable(value);
-    }
-
     public void SetButton(bool value)
     {
         _selectButton.SetActive(value);
@@ -190,6 +187,30 @@ public class Person : MonoBehaviourPunCallbacks
                 yield return new WaitWhile(() => getAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1f);
                 SetPose(FallingTag);
                 photonView.RPC("SetPose", RpcTarget.OthersBuffered, FallingTag);
+            }
+        }
+    }
+
+    public void Add(string voter)
+    {
+        if(_voterList.Contains(voter) == false)
+        {
+            if (_voterList.Count == 0)
+            {
+                _spotLight.SetActive(true);
+            }
+            _voterList.Add(voter);
+        }
+    }
+
+    public void Remove(string voter)
+    {
+        if (_voterList.Contains(voter) == true)
+        {
+            _voterList.Remove(voter);
+            if (_voterList.Count == 0)
+            {
+                _spotLight.SetActive(false);
             }
         }
     }

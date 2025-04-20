@@ -37,6 +37,7 @@ public class GameManager : Manager
 
     public const string TurnKey = "Turn";
     public const string TimeKey = "Time";
+    public const string MessageKey = "Message";
     public const string EndKey = "End";
 
     public static readonly float TimeLimitValue = 10;
@@ -54,10 +55,17 @@ public class GameManager : Manager
             }
             else if (Input.GetMouseButtonDown(0) && _stageController != null)
             {
-                //데이터 전송
-                _stageController.GetPerson();
+                getStateController.ShowState(_stageController.GetSelectInfo());
             }
             getStateController.UpdateTime(currentTime);
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (_stageController != null)
+        {
+            getStateController.ShowRemains(_stageController.GetRemainsCount());
         }
     }
 
@@ -65,7 +73,7 @@ public class GameManager : Manager
     {
         base.Initialize();
         SetInteractable(true);
-        _stageController?.Initialize((value) => { getStateController.ShowRemains(value); });
+        _stageController?.Initialize();
         if(PhotonNetwork.IsMasterClient == true)
         {
             PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, 0} });
@@ -119,6 +127,14 @@ public class GameManager : Manager
                         }
                         getStateController.OnRoomPropertiesUpdate(turn);
                         _stageController?.OnRoomPropertiesUpdate(turn);
+                        break;
+                    case MessageKey:
+                        break;
+                    case EndKey:
+                        //결과 보고
+                        break;
+                    default:
+                        _stageController?.OnRoomPropertiesUpdate(key, hashtable[key]);
                         break;
                 }
             }

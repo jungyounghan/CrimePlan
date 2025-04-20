@@ -50,36 +50,18 @@ public class StateController : MonoBehaviour
         SetRemainingText();
     }
 
-    public void ShowRemains(IEnumerable<Person> persons)
+    public void ShowRemains((byte, byte) value)
     {
-        _survivor = 0;
-        _criminal = 0;
-        if (persons != null)
-        {
-            foreach (Person person in persons)
-            {
-                if (person != null && person.alive == true)
-                {
-                    _survivor++;
-                    if (person.identification == Person.Criminal)
-                    {
-                        _criminal++;
-                    }
-                }
-            }
-        }
+        _survivor = value.Item1;
+        _criminal = value.Item2;
         SetRemainingText();
     }
 
-    public void UpdateSelect(Person person)
+    public void ShowState((Person, bool) info)
     {
-        if(person != null)
+        if (info.Item1 != null)
         {
 
-        }
-        else
-        {
-            //¼û±â±â
         }
     }
 

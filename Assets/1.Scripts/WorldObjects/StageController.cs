@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,12 +25,13 @@ public class StageController : MonoBehaviour
         }
     }
 
+    private bool _pressable = false;
+
     [SerializeField]
     private Light _solarLight;
     [SerializeField]
     private Person[] _personPrefabs = new Person[Person.FormCount];
     private List<Person> _personList = new List<Person>();
-    private Action<IEnumerable<Person>> _personAction = null;
 
     private static readonly int PersonAlignmentCount = 3;
     private static readonly string PersonPrefix = "Person";
@@ -98,24 +98,11 @@ public class StageController : MonoBehaviour
                 }
             });
             _personList.Add(person);
-            _personAction?.Invoke(_personList);
         }
     }
 
-    private void SetInteractable(bool value)
+    public void Initialize()
     {
-        foreach (Person person in _personList)
-        {
-            if(person != null && person.alive == true)
-            {
-                person.SetInteractable(value);
-            }
-        }
-    }
-
-    public void Initialize(Action<IEnumerable<Person>> action)
-    {
-        _personAction = action;
         Person.createAction += Create;
         if(PhotonNetwork.IsMasterClient == true && _personPrefabs.Length == Person.FormCount && _personPrefabs[((int)Person.Form.Capper)] != null && _personPrefabs[((int)Person.Form.Lady)] != null && _personPrefabs[((int)Person.Form.Strider)] != null)
         {
@@ -126,7 +113,7 @@ public class StageController : MonoBehaviour
             foreach (Player player in players.Values)
             {
                 Hashtable hashtable = player.CustomProperties;
-                byte form = hashtable != null && hashtable.ContainsKey(RoomManager.PersonFormKey) && hashtable[RoomManager.PersonFormKey] != null && byte.TryParse(hashtable[RoomManager.PersonFormKey].ToString(), out form) ? form : (byte)UnityEngine.Random.Range(0, Person.FormCount);
+                byte form = hashtable != null && hashtable.ContainsKey(RoomManager.PersonFormKey) && hashtable[RoomManager.PersonFormKey] != null && byte.TryParse(hashtable[RoomManager.PersonFormKey].ToString(), out form) ? form : (byte)Random.Range(0, Person.FormCount);
                 if (form > (int)Person.Form.Strider)
                 {
                     form = (byte)Person.Form.Strider;
@@ -145,18 +132,18 @@ public class StageController : MonoBehaviour
             }
             if (criminalCount == 0)
             {
-                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), null, Person.Criminal));
+                list.Add(((byte)Random.Range(0, Person.FormCount), null, Person.Criminal));
                 criminalCount++;
             }
             for (; citizenCount < criminalCount * 2 + 1; citizenCount++) //시민 부족 → 시민 보충
             {
-                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), null, Person.Citizen));
+                list.Add(((byte)Random.Range(0, Person.FormCount), null, Person.Citizen));
             }
             for (; criminalCount < (citizenCount - 1) / 2; criminalCount++) //범인 부족 → 범인 보충
             {
-                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), null, Person.Criminal));
+                list.Add(((byte)Random.Range(0, Person.FormCount), null, Person.Criminal));
             }
-            list = list.OrderBy(value => UnityEngine.Random.value).ToList();//AI와 유저를 특정하지 못하도록 순서 섞어주기
+            list = list.OrderBy(value => Random.value).ToList();//AI와 유저를 특정하지 못하도록 순서 섞어주기
             int totalRows = Mathf.CeilToInt(list.Count / (float)PersonAlignmentCount);
             for (int i = 0; i < list.Count; i++)
             {
@@ -180,9 +167,13 @@ public class StageController : MonoBehaviour
 
     public void UpdateTurn()
     {
+        _pressable = false;
         if (PhotonNetwork.IsMasterClient == false)
         {
-            SetInteractable(false);
+            foreach (Person person in _personList)
+            {
+                person?.SetButton(false);
+            }
         }
         else
         {
@@ -217,7 +208,7 @@ public class StageController : MonoBehaviour
                 {
                     if (person != null)
                     {
-                        person.SetInteractable(false);
+                        person.SetButton(false);
                         if (person.alive == true) //살아있어야 투표가 가능하다.
                         {
                             switch(person.identification)
@@ -330,33 +321,61 @@ public class StageController : MonoBehaviour
     {
         GameManager.Cycle cycle = (GameManager.Cycle)(turn % (int)GameManager.Cycle.End);
         _solarLight.Set(LightTypes[(int)cycle].Item1, LightTypes[(int)cycle].Item2);
-        switch (cycle)
+        foreach (Person person in _personList) //선택을 할 수 있는 경우
         {
-            case GameManager.Cycle.Evening:
-                foreach(Person person in _personList)
-                {
-                    if(person != null && person.owner == PhotonNetwork.NickName && person.alive == true && person.identification == Person.Criminal)
-                    {
-                        SetInteractable(true);
-                        break;
-                    }
-                }
+            if (person != null && person.owner == PhotonNetwork.NickName && person.alive == true && (cycle == GameManager.Cycle.Morning || (cycle == GameManager.Cycle.Evening && person.identification == Person.Criminal)))
+            {
+                _pressable = true;
                 break;
-            case GameManager.Cycle.Morning:
-                foreach (Person person in _personList)
-                {
-                    if (person != null && person.owner == PhotonNetwork.NickName && person.alive == true)
-                    {
-                        SetInteractable(true);
-                        break;
-                    }
-                }
-                break;
+            }
         }
     }
 
-    public Person GetPerson()
+    public void OnRoomPropertiesUpdate(string key, object value)
     {
+        bool dead = false; //죽은 플레이어는 관전 모드
+        foreach (Person person in _personList)
+        {
+            if(person != null && person.owner == PhotonNetwork.NickName && person.alive == false)
+            {
+                dead = true;
+                break;
+            }
+        }
+        foreach (Person person in _personList)
+        {
+            if (person != null)
+            {
+                person.Remove(key);
+                if ((_pressable == true || dead == true) && value != null && person.name == value.ToString())
+                {
+                    person.Add(key);
+                }
+            }
+        }
+    }
+
+    public (byte, byte) GetRemainsCount()
+    {
+        byte survivor = 0;
+        byte criminal = 0;
+        foreach (Person person in _personList)
+        {
+            if (person != null && person.alive == true)
+            {
+                survivor++;
+                if (person.identification == Person.Criminal)
+                {
+                    criminal++;
+                }
+            }
+        }
+        return (survivor, criminal);
+    }
+
+    public (Person, bool) GetSelectInfo()
+    {
+        bool identity = Person.Citizen;
         Person person = null;
         if (Camera.main != null && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit) == true)
         {
@@ -364,6 +383,10 @@ public class StageController : MonoBehaviour
             {
                 if (_personList[i] != null)
                 {
+                    if(_personList[i].owner == PhotonNetwork.NickName && _personList[i].identification == Person.Criminal)
+                    {
+                        identity = Person.Criminal;
+                    }
                     if(_personList[i].gameObject == hit.collider.gameObject)
                     {
                         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())  //ui 버튼 위를 클릭했다면 뒤의 콜라이더 클릭 무시
@@ -372,7 +395,10 @@ public class StageController : MonoBehaviour
                         }
                         else
                         {
-                            _personList[i].SetButton(true);
+                            if (_pressable == true)
+                            {
+                                _personList[i].SetButton(true);
+                            }
                             person = _personList[i];
                         }
                     }
@@ -383,6 +409,6 @@ public class StageController : MonoBehaviour
                 }
             }
         }
-        return person;
+        return (person, identity);
     }
 }
