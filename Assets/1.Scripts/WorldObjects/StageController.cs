@@ -242,27 +242,33 @@ public class StageController : MonoBehaviour
                 }
                 List<IGrouping<string, string>> grouped = list.GroupBy(x => x).OrderByDescending(value => value.Count()).ToList();
                 grouped = grouped.Where(value => value.Count() == grouped.First().Count()).ToList();
+                string target = grouped.First().Key;
                 if (cycle == GameManager.Cycle.Morning && grouped.Count != 1)//만약 아침인데 지목할 대상이 한 명으로 모이지 않았다면 바로 저녁으로
                 {
                     if (turn + 2 == byte.MaxValue)
                     {
-                        hashtable = new Hashtable() { { GameManager.TurnKey, 0 } };
+                        turn = 0;
                     }
                     else
                     {
-                        hashtable = new Hashtable() { { GameManager.TurnKey, turn + 2 } };
+                        turn += 2;
                     }
                 }
                 else
                 {
                     if (turn + 1 == byte.MaxValue)
                     {
-                        hashtable = new Hashtable() { { GameManager.TurnKey, 0 } };
+                        turn = 0;
                     }
                     else
                     {
-                        hashtable = new Hashtable() { { GameManager.TurnKey, turn + 1 } };
+                        turn += 1;
                     }
+                }
+                hashtable = new Hashtable() { { GameManager.TurnKey, turn } };
+                if (cycle == GameManager.Cycle.Morning && grouped.Count == 1)
+                {
+                    hashtable.Add(GameManager.TargetKey, target);
                 }
                 foreach (Person person in _personList)
                 {
@@ -273,7 +279,7 @@ public class StageController : MonoBehaviour
                         {
                             case GameManager.Cycle.Midday:
                             case GameManager.Cycle.Evening:
-                                if (grouped.Count == 1 && key == grouped.First().Key && person.alive == true)
+                                if (grouped.Count == 1 && key == target && person.alive == true)
                                 {
                                     switch (person.identification)
                                     {
@@ -292,7 +298,7 @@ public class StageController : MonoBehaviour
                                 }
                                 break;
                             case GameManager.Cycle.Morning:
-                                if (dictionary.ContainsKey(key) == true && (grouped.Count != 1 || dictionary[key] != grouped.First().Key))
+                                if (dictionary.ContainsKey(key) == true && (grouped.Count != 1 || dictionary[key] != target))
                                 {
                                     hashtable.Add(key, null);
                                 }
@@ -310,7 +316,18 @@ public class StageController : MonoBehaviour
                 }
                 else                                        //승패가 안 남
                 {
-                    hashtable.Add(GameManager.TimeKey, PhotonNetwork.Time + GameManager.TimeLimitValue);
+                    switch((GameManager.Cycle)(turn % (int)GameManager.Cycle.End))
+                    {
+                        case GameManager.Cycle.Evening:
+                            hashtable.Add(GameManager.TimeKey, PhotonNetwork.Time + GameManager.EveningTimeValue);
+                            break;
+                        case GameManager.Cycle.Morning:
+                            hashtable.Add(GameManager.TimeKey, PhotonNetwork.Time + GameManager.MorningTimeValue);
+                            break;
+                        case GameManager.Cycle.Midday:
+                            hashtable.Add(GameManager.TimeKey, PhotonNetwork.Time + GameManager.MiddayTimeValue);
+                            break;
+                    }
                 }
                 room.SetCustomProperties(hashtable);
             }
@@ -389,17 +406,14 @@ public class StageController : MonoBehaviour
                     }
                     if(_personList[i].gameObject == hit.collider.gameObject)
                     {
-                        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())  //ui 버튼 위를 클릭했다면 뒤의 콜라이더 클릭 무시
+                        person = _personList[i];
+                        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())//ui 버튼 위를 클릭했다면 뒤의 콜라이더 클릭 무시
                         {
                             continue;
                         }
-                        else
+                        else if (_pressable == true)
                         {
-                            if (_pressable == true)
-                            {
-                                _personList[i].SetButton(true);
-                            }
-                            person = _personList[i];
+                            _personList[i].SetButton(true);
                         }
                     }
                     else

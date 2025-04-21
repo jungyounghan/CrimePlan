@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 8119724}
   - component: {fileID: 8119723}
   m_Layer: 5
-  m_Name: PlayerText (TMP)
+  m_Name: NameText (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -180,7 +180,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Player
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b3781804bf1a7bd4c8a85d8dbf86fb21, type: 2}
   m_sharedMaterial: {fileID: 3020036071302290897, guid: b3781804bf1a7bd4c8a85d8dbf86fb21, type: 2}
@@ -207,7 +207,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 54.2
+  m_fontSize: 36
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -628,7 +628,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 480859631}
   m_OnClick:
     m_PersistentCalls:
@@ -1035,7 +1035,7 @@ GameObject:
   - component: {fileID: 819207894}
   - component: {fileID: 819207893}
   m_Layer: 5
-  m_Name: PersonText (TMP)
+  m_Name: RemainsText (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1323,8 +1323,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1650804331}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.1, y: 0.1}
+  m_AnchorMax: {x: 0.9, y: 0.9}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -1348,7 +1348,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC2DC\uAC04 \uC99D\uAC00"
+  m_text: "\uCC2C\uC131"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b3781804bf1a7bd4c8a85d8dbf86fb21, type: 2}
   m_sharedMaterial: {fileID: 3020036071302290897, guid: b3781804bf1a7bd4c8a85d8dbf86fb21, type: 2}
@@ -1375,7 +1375,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 29.5
+  m_fontSize: 43.35
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -2199,8 +2199,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 480859629}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.1, y: 0.1}
+  m_AnchorMax: {x: 0.9, y: 0.9}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -2224,7 +2224,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC2DC\uAC04 \uB2E8\uCD95"
+  m_text: "\uBC18\uB300"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b3781804bf1a7bd4c8a85d8dbf86fb21, type: 2}
   m_sharedMaterial: {fileID: 3020036071302290897, guid: b3781804bf1a7bd4c8a85d8dbf86fb21, type: 2}
@@ -2251,7 +2251,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 29.5
+  m_fontSize: 43.35
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -2474,7 +2474,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 1650804333}
   m_OnClick:
     m_PersistentCalls:
@@ -3174,8 +3174,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _turnText: {fileID: 779681265}
-  _personText: {fileID: 819207893}
+  _remainsText: {fileID: 819207893}
   _timerText: {fileID: 866993707}
+  _nameText: {fileID: 8119723}
+  _stateText: {fileID: 1058438458}
+  _yesButton: {fileID: 1650804332}
+  _noButton: {fileID: 480859630}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

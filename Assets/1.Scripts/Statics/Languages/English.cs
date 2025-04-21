@@ -43,7 +43,12 @@ public static class English
                 case Translation.Letter.Select:
                     letters[i] = "Select";
                     break;
-
+                case Translation.Letter.Agree:
+                    letters[i] = "Agree";
+                    break;
+                case Translation.Letter.Disagree:
+                    letters[i] = "Disagree";
+                    break;
                 case Translation.Letter.Volume:
                     letters[i] = "Volume";
                     break;
@@ -58,6 +63,9 @@ public static class English
                     break;
                 case Translation.Letter.Language:
                     letters[i] = "Language";
+                    break;
+                case Translation.Letter.Time:
+                    letters[i] = "Time";
                     break;
                 case Translation.Letter.Evening:
                     letters[i] = "Evening";
@@ -74,13 +82,24 @@ public static class English
                 case Translation.Letter.Survivor:
                     letters[i] = "Survivor";
                     break;
+                case Translation.Letter.Alive:
+                    letters[i] = "Alive";
+                    break;
+                case Translation.Letter.Dead:
+                    letters[i] = "Dead";
+                    break;
+                case Translation.Letter.Unknown:
+                    letters[i] = "Unknown";
+                    break;
                 case Translation.Letter.Citizen:
                     letters[i] = "Citizen";
                     break;
                 case Translation.Letter.Criminal:
                     letters[i] = "Criminal";
                     break;
-
+                case Translation.Letter.Identity:
+                    letters[i] = "Identity";
+                    break;
                 case Translation.Letter.Identification:
                     letters[i] = "User Id";
                     break;
@@ -106,6 +125,12 @@ public static class English
 
                 case Translation.Letter.Day:
                     letters[i] = "Day {0}";
+                    break;
+                case Translation.Letter.Increase:
+                    letters[i] = "Increase {0}";
+                    break;
+                case Translation.Letter.Decrease:
+                    letters[i] = "Decrease {0}";
                     break;
                 case Translation.Letter.Remaining:
                     letters[i] = "Remaining {0}";

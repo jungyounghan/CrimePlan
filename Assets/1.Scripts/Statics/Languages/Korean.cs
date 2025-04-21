@@ -43,7 +43,12 @@ public static class Korean
                 case Translation.Letter.Select:
                     letters[i] = "선택";
                     break;
-
+                case Translation.Letter.Agree:
+                    letters[i] = "찬성";
+                    break;
+                case Translation.Letter.Disagree:
+                    letters[i] = "반대";
+                    break;
                 case Translation.Letter.Volume:
                     letters[i] = "음량";
                     break;
@@ -58,6 +63,9 @@ public static class Korean
                     break;
                 case Translation.Letter.Language:
                     letters[i] = "언어";
+                    break;
+                case Translation.Letter.Time:
+                    letters[i] = "시간";
                     break;
                 case Translation.Letter.Evening:
                     letters[i] = "저녁";
@@ -74,13 +82,24 @@ public static class Korean
                 case Translation.Letter.Survivor:
                     letters[i] = "생존자";
                     break;
+                case Translation.Letter.Alive:
+                    letters[i] = "생존";
+                    break;
+                case Translation.Letter.Dead:
+                    letters[i] = "사망";
+                    break;
+                case Translation.Letter.Unknown:
+                    letters[i] = "모름";
+                    break;
                 case Translation.Letter.Citizen:
                     letters[i] = "시민";
                     break;
                 case Translation.Letter.Criminal:
                     letters[i] = "범인";
                     break;
-
+                case Translation.Letter.Identity:
+                    letters[i] = "신원";
+                    break;
                 case Translation.Letter.Identification:
                     letters[i] = "아이디";
                     break;
@@ -94,7 +113,6 @@ public static class Korean
                     letters[i] = "로그인";
                     break;
 
-
                 case Translation.Letter.RequestValid:
                     letters[i] = "올바른 {0}를 입력해주세요";
                     break;
@@ -107,6 +125,12 @@ public static class Korean
 
                 case Translation.Letter.Day:
                     letters[i] = "{0}일";
+                    break;
+                case Translation.Letter.Increase:
+                    letters[i] = "{0} 증가";
+                    break;
+                case Translation.Letter.Decrease:
+                    letters[i] = "{0} 감소";
                     break;
                 case Translation.Letter.Remaining:
                     letters[i] = "남은 {0}";

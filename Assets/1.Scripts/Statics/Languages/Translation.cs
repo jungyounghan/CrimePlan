@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 public static class Translation
 {
     public enum Language : byte
@@ -22,20 +20,25 @@ public static class Translation
         Success,
         Failed,
         Select,
-
+        Agree,
+        Disagree,
         Volume,
         Master,
         Effect,
         Background,
         Language,
+        Time,
         Evening,
         Morning,
         Midday,
         Mine,
         Survivor,
+        Alive,
+        Dead,
+        Unknown,
         Citizen,
         Criminal,
-
+        Identity,
         Identification,
         Password,
         SignUp,
@@ -46,6 +49,8 @@ public static class Translation
         AlreadyConnected,
 
         Day,
+        Increase,
+        Decrease,
         Remaining,
         DoYouWantTo,
         TryConnection,

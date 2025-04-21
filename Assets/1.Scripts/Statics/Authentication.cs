@@ -5,7 +5,6 @@ using Firebase.Auth;
 using Firebase.Database;
 using Firebase.Extensions;
 using Photon.Pun;
-using Photon.Realtime;
 
 public static class Authentication
 {

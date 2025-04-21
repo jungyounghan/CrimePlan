@@ -34,13 +34,17 @@ public class GameManager : Manager
     }
 
     private double _waitingTime = 0;
+    private string _targetName = null;
 
     public const string TurnKey = "Turn";
     public const string TimeKey = "Time";
-    public const string MessageKey = "Message";
+    public const string TargetKey = "Target";
     public const string EndKey = "End";
 
-    public static readonly float TimeLimitValue = 10;
+    public static readonly double EveningTimeValue = 10;
+    public static readonly double MorningTimeValue = 30;
+    public static readonly double MiddayTimeValue = 10;
+    public static readonly double TimeLimitValue = 10;
     public static readonly string SceneName = "GameScene";
 
     private void Update()
@@ -50,14 +54,13 @@ public class GameManager : Manager
             double currentTime = _waitingTime - PhotonNetwork.Time;
             if (currentTime <= 0)
             {
-                _waitingTime = 0;
-                _stageController?.UpdateTurn();
+                UpdateTurn();
             }
             else if (Input.GetMouseButtonDown(0) && _stageController != null)
             {
-                getStateController.ShowState(_stageController.GetSelectInfo());
+                getStateController.SelectPerson(_stageController.GetSelectInfo());
             }
-            getStateController.UpdateTime(currentTime);
+            getStateController.UpdateState(currentTime);
         }
     }
 
@@ -69,14 +72,69 @@ public class GameManager : Manager
         }
     }
 
+    private void SelectTime(bool increasing)
+    {
+        Room room = PhotonNetwork.CurrentRoom;
+        if (room != null)
+        {
+            double time = PhotonNetwork.Time;
+            double currentTime = _waitingTime - time;
+            if (currentTime > 0)
+            {
+                if (increasing == true)
+                {
+                    room.SetCustomProperties(new Hashtable() { { TimeKey, _waitingTime + TimeLimitValue } });
+                }
+                else if (currentTime - TimeLimitValue > 0)
+                {
+                    room.SetCustomProperties(new Hashtable() { { TimeKey, _waitingTime - TimeLimitValue } });
+                }
+                else
+                {
+                    room.SetCustomProperties(new Hashtable() { { TimeKey, time } });
+                }
+            }
+        }
+    }
+
+    private void SelectTarget(bool agree)
+    {
+        if(string.IsNullOrEmpty(_targetName) == false)
+        {
+            Room room = PhotonNetwork.CurrentRoom;
+            if (room != null)
+            {
+                if (agree == true)
+                {
+                    room.SetCustomProperties(new Hashtable() { { PhotonNetwork.NickName, _targetName} });
+                }
+                else
+                {
+                    room.SetCustomProperties(new Hashtable() { { PhotonNetwork.NickName, null } });
+                }
+            }
+        }
+    }
+
+    private void UpdateTurn()
+    {
+        _waitingTime = 0;
+        if (string.IsNullOrEmpty(_targetName) == false)
+        {
+            _targetName = null;
+        }
+        _stageController?.UpdateTurn();
+    }
+
     protected override void Initialize()
     {
         base.Initialize();
         SetInteractable(true);
         _stageController?.Initialize();
+        getStateController.Initialize(SelectTime, SelectTarget);
         if(PhotonNetwork.IsMasterClient == true)
         {
-            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, 0} });
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + EveningTimeValue }, { TurnKey, 0} });
         }
         else
         {
@@ -110,13 +168,15 @@ public class GameManager : Manager
                 switch(key)
                 {
                     case TimeKey:
-                        if (hashtable[key] != null && float.TryParse(hashtable[key].ToString(), out float time) == true)
+                        if (hashtable[key] != null && double.TryParse(hashtable[key].ToString(), out double time) == true)
                         {
                             _waitingTime = time;
-                        }
-                        else
-                        {
-                            _waitingTime = 0;
+                            double currentTime = _waitingTime - PhotonNetwork.Time;
+                            if (currentTime <= 0)
+                            {
+                                UpdateTurn();
+                                getStateController.UpdateState(currentTime);
+                            }
                         }
                         break;
                     case TurnKey:
@@ -128,7 +188,8 @@ public class GameManager : Manager
                         getStateController.OnRoomPropertiesUpdate(turn);
                         _stageController?.OnRoomPropertiesUpdate(turn);
                         break;
-                    case MessageKey:
+                    case TargetKey:
+                        _targetName = hashtable[key] != null ? hashtable[key].ToString() : null;
                         break;
                     case EndKey:
                         //결과 보고
