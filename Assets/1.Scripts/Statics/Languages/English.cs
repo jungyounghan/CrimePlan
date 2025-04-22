@@ -97,6 +97,9 @@ public static class English
                 case Translation.Letter.Criminal:
                     letters[i] = "Criminal";
                     break;
+                case Translation.Letter.Victory:
+                    letters[i] = "Victory";
+                    break;
                 case Translation.Letter.Identity:
                     letters[i] = "Identity";
                     break;
@@ -111,6 +114,24 @@ public static class English
                     break;
                 case Translation.Letter.SignIn:
                     letters[i] = "Sign In";
+                    break;
+                case Translation.Letter.Accessor:
+                    letters[i] = "Accessor";
+                    break;
+                case Translation.Letter.Room:
+                    letters[i] = "Room";
+                    break;
+                case Translation.Letter.Name:
+                    letters[i] = "Name";
+                    break;
+                case Translation.Letter.Create:
+                    letters[i] = "Create";
+                    break;
+                case Translation.Letter.Join:
+                    letters[i] = "Join";
+                    break;
+                case Translation.Letter.Exit:
+                    letters[i] = "Exit";
                     break;
 
                 case Translation.Letter.RequestValid:

@@ -155,7 +155,7 @@ public static class Authentication
                                         }
                                         else //트랜잭션 성공 = 내가 첫 로그인 사용자
                                         {
-                                            PhotonNetwork.NickName = userId;
+                                            PhotonNetwork.NickName = identification;
                                             databaseReference.Child(SessionTag).OnDisconnect().SetValue(""); // 나만 이 세션 소유
                                             action?.Invoke(State.SignInSuccess); // 이후 주기적으로 내 세션 유지 확인 필요
                                             sessionListener = (object sender, ValueChangedEventArgs arguments) =>

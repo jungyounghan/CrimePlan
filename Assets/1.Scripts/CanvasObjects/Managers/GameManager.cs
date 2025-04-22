@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
@@ -25,6 +26,16 @@ public class GameManager : Manager
     [Header(nameof(GameManager)), SerializeField]
     private StageController _stageController;
 
+    private enum Message
+    {
+        None,
+        Disconnect,
+        Citizen,
+        Criminal,
+    }
+
+    private Message _message = Message.None;
+
     public enum Cycle: byte
     {
         Evening,
@@ -35,15 +46,13 @@ public class GameManager : Manager
 
     private double _waitingTime = 0;
     private string _targetName = null;
+    private static readonly float EndTimeValue = 3f;
 
     public const string TurnKey = "Turn";
     public const string TimeKey = "Time";
     public const string TargetKey = "Target";
     public const string EndKey = "End";
 
-    public static readonly double EveningTimeValue = 10;
-    public static readonly double MorningTimeValue = 30;
-    public static readonly double MiddayTimeValue = 10;
     public static readonly double TimeLimitValue = 10;
     public static readonly string SceneName = "GameScene";
 
@@ -97,23 +106,26 @@ public class GameManager : Manager
         }
     }
 
-    private void SelectTarget(bool agree)
+    private void ShowMessage()
     {
-        if(string.IsNullOrEmpty(_targetName) == false)
+        switch (_message)
         {
-            Room room = PhotonNetwork.CurrentRoom;
-            if (room != null)
-            {
-                if (agree == true)
-                {
-                    room.SetCustomProperties(new Hashtable() { { PhotonNetwork.NickName, _targetName} });
-                }
-                else
-                {
-                    room.SetCustomProperties(new Hashtable() { { PhotonNetwork.NickName, null } });
-                }
-            }
+            case Message.Disconnect:
+                SetExplain(Translation.Get(Translation.Letter.LoseConnection));
+                break;
+            case Message.Citizen:
+                SetExplain(Translation.Get(Translation.Letter.Citizen) + " " + Translation.Get(Translation.Letter.Victory));
+                break;
+            case Message.Criminal:
+                SetExplain(Translation.Get(Translation.Letter.Criminal) + " " + Translation.Get(Translation.Letter.Victory));
+                break;
         }
+    }
+
+    private void ShowMessage(Message message)
+    {
+        _message = message;
+        ShowMessage();
     }
 
     private void UpdateTurn()
@@ -131,10 +143,10 @@ public class GameManager : Manager
         base.Initialize();
         SetInteractable(true);
         _stageController?.Initialize();
-        getStateController.Initialize(SelectTime, SelectTarget);
+        getStateController.Initialize(SelectTime, (value) => { _stageController?.SelectTarget(_targetName, value); });
         if(PhotonNetwork.IsMasterClient == true)
         {
-            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + EveningTimeValue }, { TurnKey, 0} });
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, 0} });
         }
         else
         {
@@ -157,6 +169,13 @@ public class GameManager : Manager
         base.ChangeText(language);
         _stageController?.ChangeText();
         getStateController.ChangeText();
+        ShowMessage();
+    }
+
+    protected override void ShowQuit()
+    {
+        ShowMessage(Message.Disconnect);
+        base.ShowQuit();
     }
 
     public override void OnRoomPropertiesUpdate(Hashtable hashtable)
@@ -190,9 +209,29 @@ public class GameManager : Manager
                         break;
                     case TargetKey:
                         _targetName = hashtable[key] != null ? hashtable[key].ToString() : null;
+                        _stageController?.OnRoomPropertiesUpdate(_targetName);
                         break;
                     case EndKey:
-                        //결과 보고
+                        if (hashtable[key] != null && bool.TryParse(hashtable[key].ToString(), out bool end) == true)
+                        {
+                            StartCoroutine(DoPlayEnd());
+                            System.Collections.IEnumerator DoPlayEnd()
+                            {
+                                yield return new WaitForSeconds(EndTimeValue);
+                                PhotonNetwork.LeaveRoom();
+                                switch (end)
+                                {
+                                    case Person.Citizen:
+                                        ShowMessage(Message.Citizen);
+                                        break;
+                                    case Person.Criminal:
+                                        ShowMessage(Message.Criminal);
+                                        break;
+                                }
+                            }
+                        }
+                        break;
+                    case RoomManager.MembersKey:
                         break;
                     default:
                         _stageController?.OnRoomPropertiesUpdate(key, hashtable[key]);
@@ -200,5 +239,15 @@ public class GameManager : Manager
                 }
             }
         }
+    }
+
+    public override void OnJoinedLobby()
+    {
+        SceneManager.LoadScene(LobbyManager.SceneName);
+    }
+
+    public override void OnLeftRoom()
+    {
+        ShowPopup(() => PhotonNetwork.JoinLobby());
     }
 }

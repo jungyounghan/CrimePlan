@@ -165,6 +165,31 @@ public class StageController : MonoBehaviour
         }
     }
 
+    public void SelectTarget(string target, bool agree)
+    {
+        if (string.IsNullOrEmpty(target) == false)
+        {
+            Room room = PhotonNetwork.CurrentRoom;
+            if (room != null)
+            {
+                foreach (Person person in _personList)
+                {
+                    if(person.owner == PhotonNetwork.NickName)
+                    {
+                        if (agree == true)
+                        {
+                            room.SetCustomProperties(new Hashtable() { { person.name, target } });
+                        }
+                        else
+                        {
+                            room.SetCustomProperties(new Hashtable() { { person.name, null } });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void UpdateTurn()
     {
         _pressable = false;
@@ -242,7 +267,6 @@ public class StageController : MonoBehaviour
                 }
                 List<IGrouping<string, string>> grouped = list.GroupBy(x => x).OrderByDescending(value => value.Count()).ToList();
                 grouped = grouped.Where(value => value.Count() == grouped.First().Count()).ToList();
-                string target = grouped.First().Key;
                 if (cycle == GameManager.Cycle.Morning && grouped.Count != 1)//만약 아침인데 지목할 대상이 한 명으로 모이지 않았다면 바로 저녁으로
                 {
                     if (turn + 2 == byte.MaxValue)
@@ -268,7 +292,7 @@ public class StageController : MonoBehaviour
                 hashtable = new Hashtable() { { GameManager.TurnKey, turn } };
                 if (cycle == GameManager.Cycle.Morning && grouped.Count == 1)
                 {
-                    hashtable.Add(GameManager.TargetKey, target);
+                    hashtable.Add(GameManager.TargetKey, grouped.First().Key);
                 }
                 foreach (Person person in _personList)
                 {
@@ -279,7 +303,7 @@ public class StageController : MonoBehaviour
                         {
                             case GameManager.Cycle.Midday:
                             case GameManager.Cycle.Evening:
-                                if (grouped.Count == 1 && key == target && person.alive == true)
+                                if (grouped.Count == 1 && key == grouped.First().Key && person.alive == true)
                                 {
                                     switch (person.identification)
                                     {
@@ -298,7 +322,7 @@ public class StageController : MonoBehaviour
                                 }
                                 break;
                             case GameManager.Cycle.Morning:
-                                if (dictionary.ContainsKey(key) == true && (grouped.Count != 1 || dictionary[key] != target))
+                                if (dictionary.ContainsKey(key) == true && (grouped.Count != 1 || dictionary[key] != grouped.First().Key))
                                 {
                                     hashtable.Add(key, null);
                                 }
@@ -309,23 +333,23 @@ public class StageController : MonoBehaviour
                 if (criminalCount == 0)                     //시민 승리
                 {
                     hashtable.Add(GameManager.EndKey, Person.Citizen);
+                    hashtable.Add(RoomManager.MembersKey, null);
                 }
                 else if (citizenCount <= criminalCount)     //범인 승리
                 {
                     hashtable.Add(GameManager.EndKey, Person.Criminal);
+                    hashtable.Add(RoomManager.MembersKey, null);
                 }
                 else                                        //승패가 안 남
                 {
                     switch((GameManager.Cycle)(turn % (int)GameManager.Cycle.End))
                     {
                         case GameManager.Cycle.Evening:
-                            hashtable.Add(GameManager.TimeKey, PhotonNetwork.Time + GameManager.EveningTimeValue);
+                        case GameManager.Cycle.Midday:
+                            hashtable.Add(GameManager.TimeKey, PhotonNetwork.Time + GameManager.TimeLimitValue);
                             break;
                         case GameManager.Cycle.Morning:
-                            hashtable.Add(GameManager.TimeKey, PhotonNetwork.Time + GameManager.MorningTimeValue);
-                            break;
-                        case GameManager.Cycle.Midday:
-                            hashtable.Add(GameManager.TimeKey, PhotonNetwork.Time + GameManager.MiddayTimeValue);
+                            hashtable.Add(GameManager.TimeKey, PhotonNetwork.Time + GameManager.TimeLimitValue * (byte)_personList.Count(x => x.owner != null));
                             break;
                     }
                 }
@@ -340,10 +364,24 @@ public class StageController : MonoBehaviour
         _solarLight.Set(LightTypes[(int)cycle].Item1, LightTypes[(int)cycle].Item2);
         foreach (Person person in _personList) //선택을 할 수 있는 경우
         {
-            if (person != null && person.owner == PhotonNetwork.NickName && person.alive == true && (cycle == GameManager.Cycle.Morning || (cycle == GameManager.Cycle.Evening && person.identification == Person.Criminal)))
+            if (person != null)
             {
-                _pressable = true;
-                break;
+                person.SetLight(false);
+                if (_pressable == false && person.owner == PhotonNetwork.NickName && person.alive == true && (cycle == GameManager.Cycle.Morning || (cycle == GameManager.Cycle.Evening && person.identification == Person.Criminal)))
+                {
+                    _pressable = true;
+                }
+            }
+        }
+    }
+
+    public void OnRoomPropertiesUpdate(string target)
+    {
+        foreach (Person person in _personList)
+        {
+            if (person != null && person.name == target)
+            {
+                person.SetLight(true);
             }
         }
     }
@@ -363,7 +401,10 @@ public class StageController : MonoBehaviour
         {
             if (person != null)
             {
-                person.Remove(key);
+                if (_pressable == true)
+                {
+                    person.Remove(key);
+                }
                 if ((_pressable == true || dead == true) && value != null && person.name == value.ToString())
                 {
                     person.Add(key);
@@ -411,7 +452,7 @@ public class StageController : MonoBehaviour
                         {
                             continue;
                         }
-                        else if (_pressable == true)
+                        else if (_pressable == true && _personList[i].owner != PhotonNetwork.NickName)
                         {
                             _personList[i].SetButton(true);
                         }

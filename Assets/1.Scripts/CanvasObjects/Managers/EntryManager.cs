@@ -42,6 +42,7 @@ public class EntryManager : Manager
     private Message _message = Message.None;
 
     private static readonly string IdentificationTag = "Identification";
+    public static readonly string SceneName = "EntryScene";
 
     private void Update()
     {
@@ -210,11 +211,11 @@ public class EntryManager : Manager
 
     public override void OnConnectedToMaster()
     {
-        SceneManager.LoadScene(LobbyManager.SceneName);
+        PhotonNetwork.JoinLobby();
     }
 
-    public override void OnDisconnected(DisconnectCause cause)
+    public override void OnJoinedLobby()
     {
-        ShowQuit();
+        SceneManager.LoadScene(LobbyManager.SceneName);
     }
 }

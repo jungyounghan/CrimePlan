@@ -1,9 +1,10 @@
+using System;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using Photon.Pun;
-using System;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Canvas))]
@@ -50,6 +51,9 @@ public class StateController : MonoBehaviour
                 _noButton.SetText(string.Format(Translation.Get(Translation.Letter.Decrease), Translation.Get(Translation.Letter.Time)));
                 break;
             case GameManager.Cycle.Evening:
+                _yesButton.SetText(null);
+                _noButton.SetText(null);
+                break;
             case GameManager.Cycle.Midday:  //찬성, 반대
                 _yesButton.SetText(Translation.Get(Translation.Letter.Agree));
                 _noButton.SetText(Translation.Get(Translation.Letter.Disagree));
@@ -80,11 +84,11 @@ public class StateController : MonoBehaviour
             StringBuilder stringBuilder = new StringBuilder();
             if (_person.owner == PhotonNetwork.NickName)
             {
-                stringBuilder.Append(Translation.Get(Translation.Letter.Mine) + ": ");
+                stringBuilder.Append(Translation.Get(Translation.Letter.Mine) + ":");
             }
             else
             {
-                stringBuilder.Append(Translation.Get(Translation.Letter.Identity) + ": ");
+                stringBuilder.Append(Translation.Get(Translation.Letter.Identity) + ":");
             }
             if (_person.alive == false)
             {
@@ -139,7 +143,11 @@ public class StateController : MonoBehaviour
             switch ((GameManager.Cycle)(_turn % (int)GameManager.Cycle.End))
             {
                 case GameManager.Cycle.Morning:
-                    morningAction?.Invoke(true);
+                    if (morningAction != null)
+                    {
+                        morningAction.Invoke(true);
+                        SetInteractable(false);
+                    }
                     break;
                 case GameManager.Cycle.Midday:
                     middayAction?.Invoke(true);
@@ -151,7 +159,11 @@ public class StateController : MonoBehaviour
             switch ((GameManager.Cycle)(_turn % (int)GameManager.Cycle.End))
             {
                 case GameManager.Cycle.Morning:
-                    morningAction?.Invoke(false);
+                    if (morningAction != null)
+                    {
+                        morningAction.Invoke(false);
+                        SetInteractable(false);
+                    }
                     break;
                 case GameManager.Cycle.Midday:
                     middayAction?.Invoke(false);
@@ -186,6 +198,10 @@ public class StateController : MonoBehaviour
 
     public void SelectPerson((Person, bool) info)
     {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            return;
+        }
         _person = info.Item1;
         _identity = info.Item2;
     }

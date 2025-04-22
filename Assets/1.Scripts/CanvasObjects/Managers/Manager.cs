@@ -6,6 +6,7 @@ using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using TMPro;
 using Photon.Pun;
+using Photon.Realtime;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Canvas))]

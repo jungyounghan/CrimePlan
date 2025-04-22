@@ -12,6 +12,8 @@ public class RoomManager : Manager
 
     public const string IdentityKey = "Identity";
     public const string PersonFormKey = "PersonForm";
+    public const string MembersKey = "Members";
+    public static readonly string SceneName = "RoomScene";
 
     protected override void Initialize()
     {

@@ -197,7 +197,7 @@ public class Person : MonoBehaviourPunCallbacks
         {
             if (_voterList.Count == 0)
             {
-                _spotLight.SetActive(true);
+                SetLight(true);
             }
             _voterList.Add(voter);
         }
@@ -210,9 +210,14 @@ public class Person : MonoBehaviourPunCallbacks
             _voterList.Remove(voter);
             if (_voterList.Count == 0)
             {
-                _spotLight.SetActive(false);
+                SetLight(false);
             }
         }
+    }
+
+    public void SetLight(bool value)
+    {
+        _spotLight.SetActive(value);
     }
 
     public override void OnEnable()

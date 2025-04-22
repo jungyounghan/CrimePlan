@@ -97,6 +97,9 @@ public static class Korean
                 case Translation.Letter.Criminal:
                     letters[i] = "범인";
                     break;
+                case Translation.Letter.Victory:
+                    letters[i] = "승리";
+                    break;
                 case Translation.Letter.Identity:
                     letters[i] = "신원";
                     break;
@@ -111,6 +114,24 @@ public static class Korean
                     break;
                 case Translation.Letter.SignIn:
                     letters[i] = "로그인";
+                    break;
+                case Translation.Letter.Accessor:
+                    letters[i] = "접속자";
+                    break;
+                case Translation.Letter.Room:
+                    letters[i] = "방";
+                    break;
+                case Translation.Letter.Name:
+                    letters[i] = "이름";
+                    break;
+                case Translation.Letter.Create:
+                    letters[i] = "만들기";
+                    break;
+                case Translation.Letter.Join:
+                    letters[i] = "입장하기";
+                    break;
+                case Translation.Letter.Exit:
+                    letters[i] = "나가기";
                     break;
 
                 case Translation.Letter.RequestValid:

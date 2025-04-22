@@ -1348,7 +1348,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uCC2C\uC131"
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b3781804bf1a7bd4c8a85d8dbf86fb21, type: 2}
   m_sharedMaterial: {fileID: 3020036071302290897, guid: b3781804bf1a7bd4c8a85d8dbf86fb21, type: 2}
@@ -1375,7 +1375,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 43.35
+  m_fontSize: 36
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -2224,7 +2224,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uBC18\uB300"
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b3781804bf1a7bd4c8a85d8dbf86fb21, type: 2}
   m_sharedMaterial: {fileID: 3020036071302290897, guid: b3781804bf1a7bd4c8a85d8dbf86fb21, type: 2}
@@ -2251,7 +2251,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 43.35
+  m_fontSize: 36
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3038,6 +3038,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 488641314}
     m_Modifications:
+    - target: {fileID: 1884838888367318715, guid: 0977f2bb75828324db0ec1be9f3f1582, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 1884838888367318715, guid: 0977f2bb75828324db0ec1be9f3f1582, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 40
+      objectReference: {fileID: 0}
     - target: {fileID: 1884838888367318715, guid: 0977f2bb75828324db0ec1be9f3f1582, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
