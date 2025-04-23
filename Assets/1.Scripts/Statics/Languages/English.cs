@@ -130,6 +130,9 @@ public static class English
                 case Translation.Letter.Join:
                     letters[i] = "Join";
                     break;
+                case Translation.Letter.Leave:
+                    letters[i] = "Leave";
+                    break;
                 case Translation.Letter.Exit:
                     letters[i] = "Exit";
                     break;

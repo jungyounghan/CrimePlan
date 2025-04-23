@@ -110,6 +110,19 @@ public static class ExtensionMethod
         }
     }
 
+    public static void SetText(this Button button, string value, bool interactable)
+    {
+        if (button != null)
+        {
+            TextMeshProUGUI[] tmpTexts = button.GetComponentsInChildren<TextMeshProUGUI>();
+            foreach (TextMeshProUGUI tmpText in tmpTexts)
+            {
+                tmpText.text = value;
+            }
+            button.interactable = interactable;
+        }
+    }
+
     public static void SetInteractable(this Button button, bool value)
     {
         if(button != null)

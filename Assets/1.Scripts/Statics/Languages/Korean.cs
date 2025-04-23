@@ -130,6 +130,9 @@ public static class Korean
                 case Translation.Letter.Join:
                     letters[i] = "입장하기";
                     break;
+                case Translation.Letter.Leave:
+                    letters[i] = "퇴장";
+                    break;
                 case Translation.Letter.Exit:
                     letters[i] = "나가기";
                     break;

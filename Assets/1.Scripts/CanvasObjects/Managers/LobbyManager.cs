@@ -112,8 +112,33 @@ public class LobbyManager : Manager
         else
         {
             _stateText.Set(Translation.Get(Translation.Letter.Identification) + ":" + PhotonNetwork.NickName);
-            //방 만들기 버튼 연결
-            //입장하기 버튼 연결
+            _createButton.SetListener(() =>
+            {
+                if (_roomInputField != null)
+                {
+                    RoomOptions roomOptions = new RoomOptions
+                    {
+                        CustomRoomProperties = new Hashtable() { { RoomManager.MembersKey, null } },
+                        CustomRoomPropertiesForLobby = new string[] { RoomManager.MembersKey }
+                    };
+                    PhotonNetwork.CreateRoom(_roomInputField.text, roomOptions);
+                }
+            });
+            _joinButton.SetListener(()=>
+            {
+                if (_roomInputField != null)
+                {
+                    string text = _roomInputField.text;
+                    if (string.IsNullOrEmpty(text) == false)
+                    {
+                        PhotonNetwork.JoinRoom(text);
+                    }
+                    else
+                    {
+                        PhotonNetwork.JoinRandomRoom();
+                    }
+                }
+            });
             _exitButton.SetListener(() => ShowPopup(Quit, ClosePopup));
             SetInteractable(true);
         }
@@ -160,32 +185,37 @@ public class LobbyManager : Manager
             if (playerCount > 0)
             {
                 Hashtable hashtable = roomInfos[i].CustomProperties;
-                if (hashtable.ContainsKey(RoomManager.MembersKey) == true && hashtable[RoomManager.MembersKey] != null && hashtable[RoomManager.MembersKey].ToString().Contains(PhotonNetwork.NickName) == true)
+                if(hashtable.ContainsKey(RoomManager.MembersKey) == false || hashtable[RoomManager.MembersKey] == null)
+                {
+                    bool done = false;
+                    if (index < _buttonList.Count)
+                    {
+                        _buttonList[index].SetListener(() =>
+                        {
+                            SetInteractable(false);
+                            PhotonNetwork.JoinRoom(roomInfos[i].Name);
+                        }, roomInfos[i].Name + "\t" + playerCount);
+                        done = true;
+                    }
+                    else if (_buttonPrefab != null && _scrollRect != null && _scrollRect.content != null)
+                    {
+                        Button button = Instantiate(_buttonPrefab, _scrollRect.content);
+                        button.SetListener(() =>
+                        {
+                            SetInteractable(false);
+                            PhotonNetwork.JoinRoom(roomInfos[i].Name);
+                        }, roomInfos[i].Name + "\t" + playerCount);
+                        _buttonList.Add(button);
+                        done = true;
+                    }
+                    if (done == true)
+                    {
+                        index++;
+                    }
+                }
+                else if (hashtable[RoomManager.MembersKey].ToString().Contains(PhotonNetwork.NickName) == true)
                 {
                     playing = roomInfos[i].Name;
-                }
-                bool done = false;
-                if(index < _buttonList.Count)
-                {
-                    _buttonList[index].SetListener(() => {
-                        SetInteractable(false);
-                        PhotonNetwork.JoinRoom(roomInfos[i].Name);
-                    }, roomInfos[i].Name + "\t" + playerCount);
-                    done = true;
-                }
-                else if(_buttonPrefab != null && _scrollRect != null && _scrollRect.content != null)
-                {
-                    Button button = Instantiate(_buttonPrefab, _scrollRect.content);
-                    button.SetListener(() => {
-                        SetInteractable(false);
-                        PhotonNetwork.JoinRoom(roomInfos[i].Name);
-                    }, roomInfos[i].Name + "\t" + playerCount);
-                    _buttonList.Add(button);
-                    done = true;
-                }
-                if (done == true)
-                {
-                    index++;
                 }
             }
         }

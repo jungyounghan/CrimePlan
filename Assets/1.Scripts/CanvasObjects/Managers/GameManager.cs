@@ -144,23 +144,21 @@ public class GameManager : Manager
         SetInteractable(true);
         _stageController?.Initialize();
         getStateController.Initialize(SelectTime, (value) => { _stageController?.SelectTarget(_targetName, value); });
-        if(PhotonNetwork.IsMasterClient == true)
+        Room room = PhotonNetwork.CurrentRoom;
+        if (room != null)
         {
-            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, 0} });
-        }
-        else
-        {
-            Room room = PhotonNetwork.CurrentRoom;
-            if (room != null)
+            if(PhotonNetwork.IsMasterClient == true)
             {
-                OnRoomPropertiesUpdate(room.CustomProperties);
+                room.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, 0 } });
             }
             else
             {
-#if UNITY_EDITOR
-                Debug.LogError("방에 접속되어 있지 않음");
-#endif
+                OnRoomPropertiesUpdate(room.CustomProperties);
             }
+        }
+        else
+        {
+            ShowQuit();
         }
     }
 
@@ -176,6 +174,12 @@ public class GameManager : Manager
     {
         ShowMessage(Message.Disconnect);
         base.ShowQuit();
+    }
+
+    public override void OnDisconnected(DisconnectCause cause)
+    {
+        ShowMessage(Message.Disconnect);
+        ShowPopup(() => { SceneManager.LoadScene(EntryManager.SceneName); });
     }
 
     public override void OnRoomPropertiesUpdate(Hashtable hashtable)
