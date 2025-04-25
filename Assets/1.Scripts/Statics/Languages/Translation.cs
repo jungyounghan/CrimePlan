@@ -9,6 +9,7 @@ public static class Translation
     public enum Letter: byte
     {
         Start,
+        Ready,
         Title,
         Version,
         Setting,
@@ -46,12 +47,13 @@ public static class Translation
         SignIn,
         Accessor,
         Room,
+        Host,
         Name,
         Create,
         Join,
         Leave,
         Exit,
-
+        Apply,
         RequestValid,
         Duplicated,
         AlreadyConnected,

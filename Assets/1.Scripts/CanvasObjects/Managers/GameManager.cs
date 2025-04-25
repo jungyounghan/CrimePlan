@@ -77,7 +77,7 @@ public class GameManager : Manager
     {
         if (_stageController != null)
         {
-            getStateController.ShowRemains(_stageController.GetRemainsCount());
+            getStateController.ShowRemains(_stageController.GetPersons());
         }
     }
 
@@ -158,7 +158,8 @@ public class GameManager : Manager
         }
         else
         {
-            ShowQuit();
+            ShowMessage(Message.Disconnect);
+            ShowPopup(Quit);
         }
     }
 
@@ -168,12 +169,6 @@ public class GameManager : Manager
         _stageController?.ChangeText();
         getStateController.ChangeText();
         ShowMessage();
-    }
-
-    protected override void ShowQuit()
-    {
-        ShowMessage(Message.Disconnect);
-        base.ShowQuit();
     }
 
     public override void OnDisconnected(DisconnectCause cause)
@@ -245,13 +240,8 @@ public class GameManager : Manager
         }
     }
 
-    public override void OnJoinedLobby()
-    {
-        SceneManager.LoadScene(LobbyManager.SceneName);
-    }
-
     public override void OnLeftRoom()
     {
-        ShowPopup(() => PhotonNetwork.JoinLobby());
+        ShowPopup(() => SceneManager.LoadScene(LobbyManager.SceneName));
     }
 }

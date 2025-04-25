@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using Photon.Pun;
 using TMPro;
+using Photon.Realtime;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Animator))]
@@ -186,7 +187,7 @@ public class Person : MonoBehaviourPunCallbacks
                 yield return new WaitUntil(() => getAnimator.GetCurrentAnimatorStateInfo(0).shortNameHash == Animator.StringToHash(FallingTag));
                 yield return new WaitWhile(() => getAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1f);
                 SetPose(FallingTag);
-                photonView.RPC("SetPose", RpcTarget.OthersBuffered, FallingTag);
+                photonView.RPC("SetPose", RpcTarget.Others, FallingTag);
             }
         }
     }
@@ -243,7 +244,7 @@ public class Person : MonoBehaviourPunCallbacks
                 {
                     yield return new WaitWhile(() => getAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1f);
                     SetPose(FallingTag);
-                    photonView.RPC("SetPose", RpcTarget.OthersBuffered, FallingTag);
+                    photonView.RPC("SetPose", RpcTarget.Others, FallingTag);
                 }
             }
         }
@@ -253,5 +254,19 @@ public class Person : MonoBehaviourPunCallbacks
     {
         base.OnDisable();
         StopAllCoroutines();
+    }
+
+    public override void OnPlayerEnteredRoom(Player player)
+    {
+        Debug.Log("OnPlayerEnteredRoom");
+        if (PhotonNetwork.IsMasterClient == true)
+        {          
+            Initialize(name, owner, _identification);
+            if(alive == false)
+            {
+                SetPose(FallingTag);
+                photonView.RPC("SetPose", RpcTarget.OthersBuffered, FallingTag);
+            }
+        }
     }
 }

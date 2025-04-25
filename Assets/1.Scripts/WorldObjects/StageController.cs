@@ -114,7 +114,7 @@ public class StageController : MonoBehaviour
             {
                 Hashtable hashtable = player.CustomProperties;
                 byte form = hashtable != null && hashtable.ContainsKey(RoomManager.PersonFormKey) && hashtable[RoomManager.PersonFormKey] != null && byte.TryParse(hashtable[RoomManager.PersonFormKey].ToString(), out form) ? form : (byte)Random.Range(0, Person.FormCount);
-                if (form > (int)Person.Form.Strider)
+                if (form > (byte)Person.Form.Strider)
                 {
                     form = (byte)Person.Form.Strider;
                 }
@@ -128,6 +128,7 @@ public class StageController : MonoBehaviour
                         criminalCount++;
                         break;
                 }
+                player.SetCustomProperties(new Hashtable() { {RoomManager.PersonFormKey, null }, {RoomManager.IdentityKey, null}});
                 list.Add((form, player.NickName, identity));
             }
             if (criminalCount == 0)
@@ -234,7 +235,7 @@ public class StageController : MonoBehaviour
                     if (person != null)
                     {
                         person.SetButton(false);
-                        if (person.alive == true) //살아있어야 투표가 가능하다.
+                        if (person.alive == true)       //살아있어야 투표가 가능하다.
                         {
                             switch(person.identification)
                             {
@@ -245,22 +246,30 @@ public class StageController : MonoBehaviour
                                     criminalCount++;
                                     break;
                             }
-                            string key = person.name;
-                            if (dictionary.ContainsKey(key) == true) //이 플레이어가 지목하는 대상이 있다면
+                            switch(cycle)
                             {
-                                switch (cycle)
-                                {
-                                    case GameManager.Cycle.Evening:
-                                        if (person.identification == Person.Criminal)
-                                        {
-                                            list.Add(dictionary[key]);
-                                        }
-                                        break;
-                                    case GameManager.Cycle.Morning:
-                                    case GameManager.Cycle.Midday:
-                                        list.Add(dictionary[key]);
-                                        break;
-                                }
+                                case GameManager.Cycle.Evening:
+                                    if (dictionary.ContainsKey(person.name) == true && person.identification == Person.Criminal)
+                                    {
+                                        list.Add(dictionary[person.name]);
+                                    }
+                                    break;
+                                case GameManager.Cycle.Morning:
+                                    if (dictionary.ContainsKey(person.name) == true)
+                                    {
+                                        list.Add(dictionary[person.name]);
+                                    }
+                                    break;
+                                case GameManager.Cycle.Midday:
+                                    if (dictionary.ContainsKey(person.name) == true)
+                                    {
+                                        list.Add(dictionary[person.name]);
+                                    }
+                                    else
+                                    {
+                                        list.Add(null);
+                                    }
+                                    break;
                             }
                         }
                     }
@@ -413,24 +422,6 @@ public class StageController : MonoBehaviour
         }
     }
 
-    public (byte, byte) GetRemainsCount()
-    {
-        byte survivor = 0;
-        byte criminal = 0;
-        foreach (Person person in _personList)
-        {
-            if (person != null && person.alive == true)
-            {
-                survivor++;
-                if (person.identification == Person.Criminal)
-                {
-                    criminal++;
-                }
-            }
-        }
-        return (survivor, criminal);
-    }
-
     public (Person, bool) GetSelectInfo()
     {
         bool identity = Person.Citizen;
@@ -465,5 +456,10 @@ public class StageController : MonoBehaviour
             }
         }
         return (person, identity);
+    }
+
+    public IEnumerable<Person> GetPersons()
+    {
+        return _personList;
     }
 }

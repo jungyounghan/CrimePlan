@@ -4,7 +4,6 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using Firebase;
 using Photon.Pun;
-using Photon.Realtime;
 
 public class EntryManager : Manager
 {
@@ -89,10 +88,10 @@ public class EntryManager : Manager
         _signInButton.SetInteractable(value);
     }
 
-    protected override void ShowQuit()
+    private void ShowQuit()
     {
         ShowMessage(Message.LoseConnection);
-        base.ShowQuit();
+        ShowPopup(Quit);
     }
 
     private void ShowMessage()
@@ -210,11 +209,6 @@ public class EntryManager : Manager
     }
 
     public override void OnConnectedToMaster()
-    {
-        PhotonNetwork.JoinLobby();
-    }
-
-    public override void OnJoinedLobby()
     {
         SceneManager.LoadScene(LobbyManager.SceneName);
     }

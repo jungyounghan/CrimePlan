@@ -29,7 +29,7 @@ public class LobbyManager : Manager
 
     [SerializeField]
     private Button _buttonPrefab;
-    private List<Button> _buttonList = new List<Button>();
+    private Dictionary<string, Button> _roomDictionary = new Dictionary<string, Button>();
 
     private enum Message
     {
@@ -95,52 +95,52 @@ public class LobbyManager : Manager
         }
     }
 
+    private void Set()
+    {
+        _stateText.Set(Translation.Get(Translation.Letter.Identification) + ":" + PhotonNetwork.NickName);
+        _createButton.SetListener(() =>
+        {
+            if (_roomInputField != null)
+            {
+                RoomOptions roomOptions = new RoomOptions
+                {
+                    CustomRoomProperties = new Hashtable() { { RoomManager.MembersKey, null } },
+                    CustomRoomPropertiesForLobby = new string[] { RoomManager.MembersKey }
+                };
+                SetInteractable(false);
+                PhotonNetwork.CreateRoom(_roomInputField.text, roomOptions);
+            }
+        });
+        _joinButton.SetListener(() =>
+        {
+            if (_roomInputField != null)
+            {
+                string text = _roomInputField.text;
+                SetInteractable(false);
+                if (string.IsNullOrEmpty(text) == false)
+                {
+                    PhotonNetwork.JoinRoom(text);
+                }
+                else
+                {
+                    PhotonNetwork.JoinRandomRoom();
+                }
+            }
+        });
+        _exitButton.SetListener(() => ShowPopup(Quit, ClosePopup));
+        PhotonNetwork.JoinLobby();
+    }
+
     protected override void Initialize()
     {
         base.Initialize();
-        if(PhotonNetwork.InLobby == false)
+        if (PhotonNetwork.IsConnectedAndReady == false)
         {
-            if(PhotonNetwork.IsConnectedAndReady == true)
-            {
-                PhotonNetwork.Disconnect();
-            }
-            else
-            {
-                OnDisconnected(DisconnectCause.None);
-            }
+            PhotonNetwork.ConnectUsingSettings();
         }
         else
         {
-            _stateText.Set(Translation.Get(Translation.Letter.Identification) + ":" + PhotonNetwork.NickName);
-            _createButton.SetListener(() =>
-            {
-                if (_roomInputField != null)
-                {
-                    RoomOptions roomOptions = new RoomOptions
-                    {
-                        CustomRoomProperties = new Hashtable() { { RoomManager.MembersKey, null } },
-                        CustomRoomPropertiesForLobby = new string[] { RoomManager.MembersKey }
-                    };
-                    PhotonNetwork.CreateRoom(_roomInputField.text, roomOptions);
-                }
-            });
-            _joinButton.SetListener(()=>
-            {
-                if (_roomInputField != null)
-                {
-                    string text = _roomInputField.text;
-                    if (string.IsNullOrEmpty(text) == false)
-                    {
-                        PhotonNetwork.JoinRoom(text);
-                    }
-                    else
-                    {
-                        PhotonNetwork.JoinRandomRoom();
-                    }
-                }
-            });
-            _exitButton.SetListener(() => ShowPopup(Quit, ClosePopup));
-            SetInteractable(true);
+            Set();
         }
     }
 
@@ -164,7 +164,7 @@ public class LobbyManager : Manager
         _createButton.SetInteractable(value);
         _joinButton.SetInteractable(value);
         _exitButton.SetInteractable(value);
-        foreach(Button button in _buttonList)
+        foreach(Button button in _roomDictionary.Values)
         {
             button.SetInteractable(value);
         }
@@ -175,53 +175,49 @@ public class LobbyManager : Manager
         ShowMessage(Message.Disconnect);
     }
 
+    public override void OnConnectedToMaster()
+    {
+        Set();
+    }
+
+    public override void OnJoinedLobby()
+    {
+        SetInteractable(true);
+    }
+
     public override void OnRoomListUpdate(List<RoomInfo> roomInfos)
     {
         string playing = null;
-        int index = 0;
-        for(int i = 0; i < roomInfos.Count; i++)
+        for (int i = 0; i < roomInfos.Count; i++)
         {
             int playerCount = roomInfos[i].PlayerCount;
-            if (playerCount > 0)
+            string name = roomInfos[i].Name;
+            if(playerCount > 0)
             {
                 Hashtable hashtable = roomInfos[i].CustomProperties;
-                if(hashtable.ContainsKey(RoomManager.MembersKey) == false || hashtable[RoomManager.MembersKey] == null)
+                if (hashtable != null && hashtable.ContainsKey(RoomManager.MembersKey) && hashtable[RoomManager.MembersKey] != null && hashtable[RoomManager.MembersKey].ToString().Contains(PhotonNetwork.NickName))
                 {
-                    bool done = false;
-                    if (index < _buttonList.Count)
-                    {
-                        _buttonList[index].SetListener(() =>
-                        {
-                            SetInteractable(false);
-                            PhotonNetwork.JoinRoom(roomInfos[i].Name);
-                        }, roomInfos[i].Name + "\t" + playerCount);
-                        done = true;
-                    }
-                    else if (_buttonPrefab != null && _scrollRect != null && _scrollRect.content != null)
-                    {
-                        Button button = Instantiate(_buttonPrefab, _scrollRect.content);
-                        button.SetListener(() =>
-                        {
-                            SetInteractable(false);
-                            PhotonNetwork.JoinRoom(roomInfos[i].Name);
-                        }, roomInfos[i].Name + "\t" + playerCount);
-                        _buttonList.Add(button);
-                        done = true;
-                    }
-                    if (done == true)
-                    {
-                        index++;
-                    }
+                    playing = name;
                 }
-                else if (hashtable[RoomManager.MembersKey].ToString().Contains(PhotonNetwork.NickName) == true)
+                if (_roomDictionary.ContainsKey(name) == false)
                 {
-                    playing = roomInfos[i].Name;
+                    Button button = Instantiate(_buttonPrefab, _scrollRect.content);
+                    button.SetListener(() =>
+                    {
+                        SetInteractable(false);
+                        PhotonNetwork.JoinRoom(name);
+                    }, name + "\t" + playerCount);
+                    _roomDictionary.Add(name, button);
+                }
+                else
+                {
+                    _roomDictionary[name].SetActive(true, name + "\t" + playerCount);
                 }
             }
-        }
-        for(int i = index; i < _buttonList.Count; i++)
-        {
-            _buttonList[i].SetActive(false);
+            else if (_roomDictionary.ContainsKey(name) == true)
+            {
+                _roomDictionary[name].SetActive(false);
+            }
         }
         if (playing != null)
         {

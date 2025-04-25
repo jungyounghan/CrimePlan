@@ -10,6 +10,9 @@ public static class Korean
                 case Translation.Letter.Start:
                     letters[i] = "시작";
                     break;
+                case Translation.Letter.Ready:
+                    letters[i] = "준비";
+                    break;
                 case Translation.Letter.Title:
                     letters[i] = "크라임 플랜";
                     break;
@@ -121,6 +124,9 @@ public static class Korean
                 case Translation.Letter.Room:
                     letters[i] = "방";
                     break;
+                case Translation.Letter.Host:
+                    letters[i] = "방장";
+                    break;
                 case Translation.Letter.Name:
                     letters[i] = "이름";
                     break;
@@ -136,7 +142,9 @@ public static class Korean
                 case Translation.Letter.Exit:
                     letters[i] = "나가기";
                     break;
-
+                case Translation.Letter.Apply:
+                    letters[i] = "{0} 희망";
+                    break;
                 case Translation.Letter.RequestValid:
                     letters[i] = "올바른 {0}를 입력해주세요";
                     break;

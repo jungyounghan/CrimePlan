@@ -6,7 +6,6 @@ using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using TMPro;
 using Photon.Pun;
-using Photon.Realtime;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Canvas))]
@@ -81,15 +80,15 @@ public abstract class Manager : MonoBehaviourPunCallbacks
     private static readonly string MasterMixer = "Master";
     private static readonly string EffectMixer = "Effect";
     private static readonly string BackgroundMixer = "Background";
-    protected static readonly string LanguageTag = "Language";
+    private static readonly string LanguageTag = "Language";
 
 #if UNITY_EDITOR
-    private static Manager _instance = null;
+    protected static Manager _instance = null;
 
     [Header("언어 변경"), SerializeField]
     private Translation.Language _language = Translation.Language.Korean;
 
-    private void OnValidate()
+    protected virtual void OnValidate()
     {
         if (gameObject.scene == SceneManager.GetActiveScene())
         {
@@ -227,10 +226,5 @@ public abstract class Manager : MonoBehaviourPunCallbacks
     protected virtual void SetInteractable(bool value)
     {
         _settingButton.SetInteractable(value);
-    }
-
-    protected virtual void ShowQuit()
-    {
-        ShowPopup(Quit);
     }
 }

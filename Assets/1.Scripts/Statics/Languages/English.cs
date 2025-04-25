@@ -10,6 +10,9 @@ public static class English
                 case Translation.Letter.Start:
                     letters[i] = "Start";
                     break;
+                case Translation.Letter.Ready:
+                    letters[i] = "Ready";
+                    break;
                 case Translation.Letter.Title:
                     letters[i] = "Crime Plan";
                     break;
@@ -121,6 +124,9 @@ public static class English
                 case Translation.Letter.Room:
                     letters[i] = "Room";
                     break;
+                case Translation.Letter.Host:
+                    letters[i] = "Host";
+                    break;
                 case Translation.Letter.Name:
                     letters[i] = "Name";
                     break;
@@ -136,7 +142,9 @@ public static class English
                 case Translation.Letter.Exit:
                     letters[i] = "Exit";
                     break;
-
+                case Translation.Letter.Apply:
+                    letters[i] = "Apply {0}";
+                    break;
                 case Translation.Letter.RequestValid:
                     letters[i] = "Please Enter a Valid {0}";
                     break;

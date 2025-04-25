@@ -98,6 +98,19 @@ public static class ExtensionMethod
         }
     }
 
+    public static void SetActive(this Button button, bool value, string text)
+    {
+        if (button != null)
+        {
+            button.gameObject.Set(value);
+            TextMeshProUGUI[] tmpTexts = button.GetComponentsInChildren<TextMeshProUGUI>();
+            foreach (TextMeshProUGUI tmpText in tmpTexts)
+            {
+                tmpText.text = text;
+            }
+        }
+    }
+
     public static void SetText(this Button button, string value)
     {
         if (button != null)

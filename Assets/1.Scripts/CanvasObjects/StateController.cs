@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -189,11 +190,32 @@ public class StateController : MonoBehaviour
         SetStateText();
     }
 
-    public void ShowRemains((byte, byte) value)
+    public void ShowRemains(IEnumerable<Person> persons)
     {
-        _survivor = value.Item1;
-        _criminal = value.Item2;
-        SetRemainingText();
+        if (persons != null)
+        {
+            _survivor = 0;
+            _criminal = 0;
+            foreach (Person person in persons)
+            {
+                if (person != null)
+                {
+                    if (person.alive == true)
+                    {
+                        _survivor++;
+                        if (person.identification == Person.Criminal)
+                        {
+                            _criminal++;
+                        }
+                    }
+                    else if(person.owner == PhotonNetwork.NickName)
+                    {
+                        SetInteractable(false);
+                    }
+                }
+            }
+            SetRemainingText();
+        }
     }
 
     public void SelectPerson((Person, bool) info)
