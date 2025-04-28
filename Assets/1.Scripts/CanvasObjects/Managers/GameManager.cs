@@ -142,24 +142,23 @@ public class GameManager : Manager
     {
         base.Initialize();
         SetInteractable(true);
-        _stageController?.Initialize();
-        getStateController.Initialize(SelectTime, (value) => { _stageController?.SelectTarget(_targetName, value); });
         Room room = PhotonNetwork.CurrentRoom;
-        if (room != null)
+        _stageController?.Initialize(() =>
         {
-            if(PhotonNetwork.IsMasterClient == true)
-            {
-                room.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, 0 } });
-            }
-            else
+            if (room != null)
             {
                 OnRoomPropertiesUpdate(room.CustomProperties);
             }
-        }
-        else
+        });
+        getStateController.Initialize(SelectTime, (value) => { _stageController?.SelectTarget(_targetName, value); });
+        if(room == null)
         {
             ShowMessage(Message.Disconnect);
             ShowPopup(Quit);
+        }
+        else if (PhotonNetwork.IsMasterClient == true)
+        {
+            room.SetCustomProperties(new Hashtable() { { TimeKey, PhotonNetwork.Time + TimeLimitValue }, { TurnKey, 0 } });
         }
     }
 

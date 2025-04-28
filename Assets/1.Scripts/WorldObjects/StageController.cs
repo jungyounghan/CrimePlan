@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,6 +6,7 @@ using UnityEngine.EventSystems;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
+using Unity.VisualScripting;
 
 [DisallowMultipleComponent]
 public class StageController : MonoBehaviour
@@ -32,6 +34,8 @@ public class StageController : MonoBehaviour
     [SerializeField]
     private Person[] _personPrefabs = new Person[Person.FormCount];
     private List<Person> _personList = new List<Person>();
+
+    private Action _loadAction = null;
 
     private static readonly int PersonAlignmentCount = 3;
     private static readonly string PersonPrefix = "Person";
@@ -73,9 +77,9 @@ public class StageController : MonoBehaviour
     {
         if (person != null)
         {
+            Room room = PhotonNetwork.CurrentRoom;
             person.transform.parent = getTransform;
             person.SetListener(() => {
-                Room room = PhotonNetwork.CurrentRoom;
                 if(room != null)
                 {
                     for(int i = 0; i < _personList.Count; i++)
@@ -98,11 +102,32 @@ public class StageController : MonoBehaviour
                 }
             });
             _personList.Add(person);
+            if (room != null)
+            {
+                Hashtable hashtable = room.CustomProperties;
+                if(hashtable.ContainsKey(RoomManager.MembersKey) == true && hashtable[RoomManager.MembersKey] != null)
+                {
+                    string[] list = hashtable[RoomManager.MembersKey].ToString().Split(" ");
+                    int length = list != null ? list.Length : 0;
+                    if (length > 0)
+                    {
+                        for (int i = 0; i < length; i++)
+                        {
+                            if (_personList.Any(person => person.owner == list[i]) == false)
+                            {
+                                return;
+                            }
+                        }
+                        _loadAction?.Invoke();
+                    }
+                }
+            }
         }
     }
 
-    public void Initialize()
+    public void Initialize(Action action)
     {
+        _loadAction = action;
         Person.createAction += Create;
         if(PhotonNetwork.IsMasterClient == true && _personPrefabs.Length == Person.FormCount && _personPrefabs[((int)Person.Form.Capper)] != null && _personPrefabs[((int)Person.Form.Lady)] != null && _personPrefabs[((int)Person.Form.Strider)] != null)
         {
@@ -113,7 +138,7 @@ public class StageController : MonoBehaviour
             foreach (Player player in players.Values)
             {
                 Hashtable hashtable = player.CustomProperties;
-                byte form = hashtable != null && hashtable.ContainsKey(RoomManager.PersonFormKey) && hashtable[RoomManager.PersonFormKey] != null && byte.TryParse(hashtable[RoomManager.PersonFormKey].ToString(), out form) ? form : (byte)Random.Range(0, Person.FormCount);
+                byte form = hashtable != null && hashtable.ContainsKey(RoomManager.PersonFormKey) && hashtable[RoomManager.PersonFormKey] != null && byte.TryParse(hashtable[RoomManager.PersonFormKey].ToString(), out form) ? form : (byte)UnityEngine.Random.Range(0, Person.FormCount);
                 if (form > (byte)Person.Form.Strider)
                 {
                     form = (byte)Person.Form.Strider;
@@ -133,18 +158,18 @@ public class StageController : MonoBehaviour
             }
             if (criminalCount == 0)
             {
-                list.Add(((byte)Random.Range(0, Person.FormCount), null, Person.Criminal));
+                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), null, Person.Criminal));
                 criminalCount++;
             }
             for (; citizenCount < criminalCount * 2 + 1; citizenCount++) //시민 부족 → 시민 보충
             {
-                list.Add(((byte)Random.Range(0, Person.FormCount), null, Person.Citizen));
+                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), null, Person.Citizen));
             }
             for (; criminalCount < (citizenCount - 1) / 2; criminalCount++) //범인 부족 → 범인 보충
             {
-                list.Add(((byte)Random.Range(0, Person.FormCount), null, Person.Criminal));
+                list.Add(((byte)UnityEngine.Random.Range(0, Person.FormCount), null, Person.Criminal));
             }
-            list = list.OrderBy(value => Random.value).ToList();//AI와 유저를 특정하지 못하도록 순서 섞어주기
+            list = list.OrderBy(value => UnityEngine.Random.value).ToList();//AI와 유저를 특정하지 못하도록 순서 섞어주기
             int totalRows = Mathf.CeilToInt(list.Count / (float)PersonAlignmentCount);
             for (int i = 0; i < list.Count; i++)
             {
@@ -299,10 +324,6 @@ public class StageController : MonoBehaviour
                     }
                 }
                 hashtable = new Hashtable() { { GameManager.TurnKey, turn } };
-                if (cycle == GameManager.Cycle.Morning && grouped.Count == 1)
-                {
-                    hashtable.Add(GameManager.TargetKey, grouped.First().Key);
-                }
                 foreach (Person person in _personList)
                 {
                     if (person != null)
@@ -325,10 +346,7 @@ public class StageController : MonoBehaviour
                                     }
                                     person.Die();
                                 }
-                                if(dictionary.ContainsKey(key) == true)
-                                {
-                                    hashtable.Add(key, null);
-                                }
+                                hashtable.Add(key, null);
                                 break;
                             case GameManager.Cycle.Morning:
                                 if (dictionary.ContainsKey(key) == true && (grouped.Count != 1 || dictionary[key] != grouped.First().Key))
@@ -338,6 +356,10 @@ public class StageController : MonoBehaviour
                                 break;
                         }
                     }
+                }
+                if (cycle == GameManager.Cycle.Morning && grouped.Count == 1)
+                {
+                    hashtable.Add(GameManager.TargetKey, grouped.First().Key);
                 }
                 if (criminalCount == 0)                     //시민 승리
                 {
@@ -371,14 +393,29 @@ public class StageController : MonoBehaviour
     {
         GameManager.Cycle cycle = (GameManager.Cycle)(turn % (int)GameManager.Cycle.End);
         _solarLight.Set(LightTypes[(int)cycle].Item1, LightTypes[(int)cycle].Item2);
+        bool dead = false;
         foreach (Person person in _personList) //선택을 할 수 있는 경우
         {
-            if (person != null)
+            if (person != null && person.owner == PhotonNetwork.NickName)
             {
-                person.SetLight(false);
-                if (_pressable == false && person.owner == PhotonNetwork.NickName && person.alive == true && (cycle == GameManager.Cycle.Morning || (cycle == GameManager.Cycle.Evening && person.identification == Person.Criminal)))
+                if(person.alive == false)
+                {
+                    dead = true;
+                }
+                else if (_pressable == false && (cycle == GameManager.Cycle.Morning || (cycle == GameManager.Cycle.Evening && person.identification == Person.Criminal)))
                 {
                     _pressable = true;
+                }
+                break;
+            }
+        }
+        if(_pressable == true || dead == true)
+        {
+            foreach (Person person in _personList)
+            {
+                if (person != null)
+                {
+                    person.SetLight(person.isVoted);
                 }
             }
         }
@@ -386,11 +423,14 @@ public class StageController : MonoBehaviour
 
     public void OnRoomPropertiesUpdate(string target)
     {
-        foreach (Person person in _personList)
+        if (string.IsNullOrEmpty(target) == false)
         {
-            if (person != null && person.name == target)
+            foreach (Person person in _personList)
             {
-                person.SetLight(true);
+                if (person != null)
+                {
+                    person.SetLight(person.name == target);
+                }
             }
         }
     }
@@ -410,13 +450,10 @@ public class StageController : MonoBehaviour
         {
             if (person != null)
             {
-                if (_pressable == true)
+                person.Vote(key, value);
+                if (_pressable || dead)
                 {
-                    person.Remove(key);
-                }
-                if ((_pressable == true || dead == true) && value != null && person.name == value.ToString())
-                {
-                    person.Add(key);
+                    person.SetLight(person.isVoted);
                 }
             }
         }
@@ -428,7 +465,16 @@ public class StageController : MonoBehaviour
         Person person = null;
         if (Camera.main != null && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit) == true)
         {
-            for(int i = 0; i < _personList.Count; i++)
+            bool dead = false; //죽은 플레이어는 관전 모드
+            for (int i = 0; i < _personList.Count; i++)
+            {
+                if (person != null && person.owner == PhotonNetwork.NickName && person.alive == false)
+                {
+                    dead = true;
+                    break;
+                }
+            }
+            for (int i = 0; i < _personList.Count; i++)
             {
                 if (_personList[i] != null)
                 {
@@ -443,7 +489,7 @@ public class StageController : MonoBehaviour
                         {
                             continue;
                         }
-                        else if (_pressable == true && _personList[i].owner != PhotonNetwork.NickName)
+                        else if (_pressable == true && _personList[i].owner != PhotonNetwork.NickName && _personList[i].alive == true && dead == false)
                         {
                             _personList[i].SetButton(true);
                         }

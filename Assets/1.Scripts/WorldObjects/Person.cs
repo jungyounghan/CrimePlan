@@ -74,6 +74,14 @@ public class Person : MonoBehaviourPunCallbacks
         }
     }
 
+    public bool isVoted
+    {
+        get
+        {
+            return _voterList.Count > 0;
+        }
+    }
+
     public string owner
     {
         get;
@@ -148,7 +156,7 @@ public class Person : MonoBehaviourPunCallbacks
         Set(name, owner, identification);
         if (PhotonNetwork.InRoom == true)
         {
-            photonView.RPC("Set", RpcTarget.OthersBuffered, name, owner, identification);
+            photonView.RPC("Set", RpcTarget.Others, name, owner, identification);
         }
     }
 
@@ -192,27 +200,15 @@ public class Person : MonoBehaviourPunCallbacks
         }
     }
 
-    public void Add(string voter)
+    public void Vote(string key, object value)
     {
-        if(_voterList.Contains(voter) == false)
+        if(_voterList.Contains(key) == true)
         {
-            if (_voterList.Count == 0)
-            {
-                SetLight(true);
-            }
-            _voterList.Add(voter);
+            _voterList.Remove(key);
         }
-    }
-
-    public void Remove(string voter)
-    {
-        if (_voterList.Contains(voter) == true)
+        if(value != null && name == value.ToString())
         {
-            _voterList.Remove(voter);
-            if (_voterList.Count == 0)
-            {
-                SetLight(false);
-            }
+            _voterList.Add(key);
         }
     }
 
@@ -223,6 +219,7 @@ public class Person : MonoBehaviourPunCallbacks
 
     public override void OnEnable()
     {
+        base.OnEnable();
         if (_canvasTransform != null)
         {
             Camera camera = Camera.main;
@@ -258,14 +255,12 @@ public class Person : MonoBehaviourPunCallbacks
 
     public override void OnPlayerEnteredRoom(Player player)
     {
-        Debug.Log("OnPlayerEnteredRoom");
         if (PhotonNetwork.IsMasterClient == true)
-        {          
-            Initialize(name, owner, _identification);
-            if(alive == false)
+        {
+            photonView.RPC("Set", player, name, owner, _identification);
+            if (alive == false)
             {
-                SetPose(FallingTag);
-                photonView.RPC("SetPose", RpcTarget.OthersBuffered, FallingTag);
+                photonView.RPC("SetPose", player, FallingTag);
             }
         }
     }

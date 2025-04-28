@@ -195,23 +195,33 @@ public class LobbyManager : Manager
             if(playerCount > 0)
             {
                 Hashtable hashtable = roomInfos[i].CustomProperties;
-                if (hashtable != null && hashtable.ContainsKey(RoomManager.MembersKey) && hashtable[RoomManager.MembersKey] != null && hashtable[RoomManager.MembersKey].ToString().Contains(PhotonNetwork.NickName))
+                if (hashtable != null && hashtable.ContainsKey(RoomManager.MembersKey) && hashtable[RoomManager.MembersKey] != null)
                 {
-                    playing = name;
-                }
-                if (_roomDictionary.ContainsKey(name) == false)
-                {
-                    Button button = Instantiate(_buttonPrefab, _scrollRect.content);
-                    button.SetListener(() =>
+                    if (hashtable[RoomManager.MembersKey].ToString().Contains(PhotonNetwork.NickName))
                     {
-                        SetInteractable(false);
-                        PhotonNetwork.JoinRoom(name);
-                    }, name + "\t" + playerCount);
-                    _roomDictionary.Add(name, button);
+                        playing = name;
+                    }
+                    else if(_roomDictionary.ContainsKey(name) == true)
+                    {
+                        _roomDictionary[name].SetActive(false);
+                    }
                 }
                 else
                 {
-                    _roomDictionary[name].SetActive(true, name + "\t" + playerCount);
+                    if (_roomDictionary.ContainsKey(name) == false)
+                    {
+                        Button button = Instantiate(_buttonPrefab, _scrollRect.content);
+                        button.SetListener(() =>
+                        {
+                            SetInteractable(false);
+                            PhotonNetwork.JoinRoom(name);
+                        }, name + "\t" + playerCount);
+                        _roomDictionary.Add(name, button);
+                    }
+                    else
+                    {
+                        _roomDictionary[name].SetActive(true, name + "\t" + playerCount);
+                    }
                 }
             }
             else if (_roomDictionary.ContainsKey(name) == true)
@@ -247,9 +257,17 @@ public class LobbyManager : Manager
         if(room != null)
         {
             Hashtable hashtable = room.CustomProperties;
-            if (hashtable.ContainsKey(RoomManager.MembersKey) == true && hashtable[RoomManager.MembersKey] != null && hashtable[RoomManager.MembersKey].ToString().Contains(PhotonNetwork.NickName) == true)
+            if (hashtable.ContainsKey(RoomManager.MembersKey) == true)
             {
-                PhotonNetwork.LoadLevel(GameManager.SceneName);
+                if (hashtable[RoomManager.MembersKey] != null && hashtable[RoomManager.MembersKey].ToString().Contains(PhotonNetwork.NickName) == true)
+                {
+                    PhotonNetwork.LoadLevel(GameManager.SceneName);
+                }
+                else
+                {
+                    PhotonNetwork.LeaveRoom();
+                    ShowMessage(Message.JoinFailed);
+                }
             }
             else
             {
