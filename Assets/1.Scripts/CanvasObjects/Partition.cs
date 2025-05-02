@@ -84,6 +84,8 @@ public class Partition : MonoBehaviour
 
     private Vector2 _sizeDelta = new Vector2();
 
+    private static float halfValue = 0.5f;
+
     private static Vector2 screenSize = new Vector2(Screen.width, Screen.height);
 
 #if UNITY_EDITOR
@@ -165,15 +167,15 @@ public class Partition : MonoBehaviour
             Vector2 anchorMax = new Vector2((safeArea.position.x + safeArea.size.x) / screenSize.x, (safeArea.position.y + safeArea.size.y) / screenSize.y);
             if (_ratio > 0)  //°ªÀÌ ¾ç¼öÀÌ¸é °¡·ÎÆøÀÌ Á¼¾ÆÁü
             {
-                float value = (safeArea.size.y / safeArea.size.x) * 0.5f * (1 / (_ratio + 1));
-                anchorMin.x = Mathf.Clamp(0.5f - value, anchorMin.x, 0.5f);
-                anchorMax.x = Mathf.Clamp(0.5f + value, 0.5f, anchorMax.x);
+                float value = (safeArea.size.y / safeArea.size.x) * halfValue * (1 / (_ratio + 1));
+                anchorMin.x = Mathf.Clamp(halfValue - value, anchorMin.x, halfValue);
+                anchorMax.x = Mathf.Clamp(halfValue + value, halfValue, anchorMax.x);
             }
             else if (_ratio < 0)  //°ªÀÌ À½¼öÀÌ¸é ¼¼·ÎÆøÀÌ Á¼¾ÆÁü
             {
-                float value = (safeArea.size.x / safeArea.size.y) * 0.5f * (1 / (-_ratio + 1));
-                anchorMin.y = Mathf.Clamp(0.5f - value, anchorMin.y, 0.5f);
-                anchorMax.y = Mathf.Clamp(0.5f + value, 0.5f, anchorMax.y);
+                float value = (safeArea.size.x / safeArea.size.y) * halfValue * (1 / (-_ratio + 1));
+                anchorMin.y = Mathf.Clamp(halfValue - value, anchorMin.y, halfValue);
+                anchorMax.y = Mathf.Clamp(halfValue + value, halfValue, anchorMax.y);
             }
             for (int i = 0; i < _frames.Length; i++)
             {
